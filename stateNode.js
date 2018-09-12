@@ -1,4 +1,4 @@
-class State {
+class StateNode {
   constructor(name) {
     this.name = name;
     this.state = {};
@@ -54,12 +54,11 @@ class State {
   }
 }
 
-module.exports = State;
+module.exports = StateNode;
 
 // developer side example
 
 // import State from _____
-// import ParentNode from ____
 
 // const AppState = new State('AppState');
 // AppState.setName('AppState') -> optional if not set in constructor

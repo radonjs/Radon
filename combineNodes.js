@@ -1,5 +1,5 @@
 // import state class for instanceof check
-const State = require('./stateNode.js');
+const StateNode = require('./stateNode.js');
 
 // ==================> FOR TESTING ONLY <=================== \\
 
@@ -70,7 +70,7 @@ combineNodes = (...args) => {
   const hashTable = {};
   args.forEach(node => {
     // all nodes must be an instance of state node (must import state class)
-    if (!(node instanceof State)) throw new Error('only state objects can be passed into combineNodes');
+    if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
 
     if (node.getParent() === null) {
       // only one node can be the root
