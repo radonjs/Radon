@@ -42,9 +42,7 @@ class State {
   }
 
   setParent(parent) {
-    if (parent instanceof State) {
-      this.parent = parent;
-    } else throw new Error('input must be an instance of class State');
+    this.parent = parent;
   }
 
   getParent() {
@@ -58,7 +56,7 @@ class State {
 
 export default State;
 
-// developer side
+// developer side example
 
 // import State from _____
 // import ParentNode from ____
