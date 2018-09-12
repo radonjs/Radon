@@ -54,7 +54,7 @@ class State {
   }
 }
 
-export default State;
+module.exports = State;
 
 // developer side example
 
