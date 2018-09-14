@@ -7,7 +7,7 @@ class StateNode {
     this.initializeState = this.initializeState.bind(this);
     this.initializeModifiers = this.initializeModifiers.bind(this);
     this.setName = this.setName.bind(this);
-    this.getname = this.getName.bind(this);
+    this.getName = this.getName.bind(this);
     this.setParent = this.setParent.bind(this);
     this.getParent = this.getParent.bind(this);
     this.getState = this.getState.bind(this);
@@ -23,6 +23,11 @@ class StateNode {
     });
   }
 
+  // linkStateModifier(stateModifier) {
+  //   if (typeof stateModifier !== 'function' ) throw new TypeError(); 
+  //   return (payload) => stateModifier(currentState, payload);  
+  // }
+
   initializeModifiers(modifiers) {
     if (typeof modifiers !== 'object') throw new Error('input must be an object');
     Object.keys(modifiers).forEach(key => {
@@ -30,6 +35,12 @@ class StateNode {
         value: this.state[key] ? this.state[key].value : null, // could be undefined
         modifiers: modifiers[key]
       }
+
+      // run modifiers through middleware
+      // we still need middleware for objects that take an index or key
+      // Object.keys(this.state[key].modifiers).forEach(modifier => {
+      //   this.state[key].modifiers.modifier = this.linkStateModifier(modifier);
+      // })
     });
   }
 
@@ -72,24 +83,24 @@ module.exports = StateNode;
 
 // AppState.initializeModifiers({
 //   name: {
-//     updateName: (payload, previous, next) => {
-//       next(payload);
+//     updateName: (currentState, payload) => {
+//       update(payload);
 //     },
-//     resetName: (payload, previous, next) => {
-//       next(null);
+//     resetName: (currentState, payload) => {
+//       update(null);
 //     }
 //   },
 //   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
+//     incrementAge: (currentState, payload) => {
+//       update(currentState + 1);
 //     },
-//     decrementAge: (payload, current, next) => {
-//       next(current - 1);
+//     decrementAge: (currentState, payload) => {
+//       update(currentState - 1);
 //     }
 //   },
 //   cart: {
-//     incrementShirts: (payload, index, current, next) => {
-//       next(payload);
+//     incrementShirts: (currentState, payload, index) => {
+//       update(payload);
 //     }
 //   }
 // });
