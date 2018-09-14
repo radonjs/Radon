@@ -1,4 +1,4 @@
-class State {
+class StateNode {
   constructor(name) {
     this.name = name;
     this.state = {};
@@ -7,7 +7,7 @@ class State {
     this.initializeState = this.initializeState.bind(this);
     this.initializeModifiers = this.initializeModifiers.bind(this);
     this.setName = this.setName.bind(this);
-    this.getname = this.getName.bind(this);
+    this.getName = this.getName.bind(this);
     this.setParent = this.setParent.bind(this);
     this.getParent = this.getParent.bind(this);
     this.getState = this.getState.bind(this);
@@ -54,12 +54,11 @@ class State {
   }
 }
 
-module.exports = State;
+module.exports = StateNode;
 
 // developer side example
 
 // import State from _____
-// import ParentNode from ____
 
 // const AppState = new State('AppState');
 // AppState.setName('AppState') -> optional if not set in constructor
@@ -73,24 +72,24 @@ module.exports = State;
 
 // AppState.initializeModifiers({
 //   name: {
-//     updateName: (payload, previous, next) => {
-//       next(payload);
+//     updateName: (currentState, payload) => {
+//       update(payload);
 //     },
-//     resetName: (payload, previous, next) => {
-//       next(null);
+//     resetName: (currentState, payload) => {
+//       update(null);
 //     }
 //   },
 //   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
+//     incrementAge: (currentState, payload) => {
+//       update(currentState + 1);
 //     },
-//     decrementAge: (payload, current, next) => {
-//       next(current - 1);
+//     decrementAge: (currentState, payload) => {
+//       update(currentState - 1);
 //     }
 //   },
 //   cart: {
-//     incrementShirts: (payload, index, current, next) => {
-//       next(payload);
+//     incrementShirts: (currentState, payload, index) => {
+//       update(payload);
 //     }
 //   }
 // });

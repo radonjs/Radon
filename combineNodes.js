@@ -1,9 +1,9 @@
 // import state class for instanceof check
-const State = require('./stateNode.js');
+const StateNode = require('./stateNode.js');
 
 // ==================> FOR TESTING ONLY <=================== \\
 
-// const AppState = new State('AppState');
+// const AppState = new StateNode('AppState');
 // // AppState.setName('AppState') -> optional if not set in constructor
 // // AppState.setParent(null);
 
@@ -15,62 +15,70 @@ const State = require('./stateNode.js');
 
 // AppState.initializeModifiers({
 //   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
+//     incrementAge: (current, payload) => {
+//       return current + payload;
 //     }
 //   }
 // });
 
-// const NavState = new State('NavState');
+// const NavState = new StateNode('NavState');
 // NavState.setParent('AppState');
 
 // NavState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: []
+//   nav: 'Nav'
 // })
 
-// NavState.initializeModifiers({
-//   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
-//     }
-//   }
-// });
-
-// const ButtState = new State('ButtState');
+// const ButtState = new StateNode('ButtState');
 // ButtState.setParent('NavState');
 
 // ButtState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: []
+//   butt: 'Butt'
 // })
-
-// ButtState.initializeModifiers({
-//   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
-//     }
-//   }
-// });
 
 //==================> TESTING CONTENT ENDED <===================\\
 
+class siloNode {
+  constructor(val, parent = null, modifiers = {}) {
+    this.value = val;
+    this.modifiers = modifiers;
+    this.subscribers = [];
+    this.parent = parent; // silo node
 
-// PROB: wanting a stateless root??
+    this.linkModifiers = this.linkModifiers.bind(this);
+    this.linkModifiers(this.modifiers);
+  }
+
+  linkModifiers(stateModifiers) {
+    const that = this;
+    Object.keys(stateModifiers).forEach(modifierKey => {
+      const modifier = stateModifiers[modifierKey];
+      if (typeof modifier !== 'function' ) throw new TypeError(); 
+      else {
+        stateModifiers[modifierKey] = payload => {
+          that.value = modifier(that.value, payload);
+          // tell subs
+        }
+      }
+    })
+  }
+}
+
+// ====> MEH <==== \\
 
 const silo = {};
+
+// combineNodes takes all of the stateNodes created by the developer. It then creates siloNodes from the
+// stateNodes and organizes them into a single nested object, the silo
 
 combineNodes = (...args) => {
   // you called this function without passing stuff? Weird
   if (args.length === 0) return;
 
-  // maps the state nodes into hashtable
+  // maps the state nodes into a hashtable
   const hashTable = {};
   args.forEach(node => {
     // all nodes must be an instance of state node (must import state class)
-    if (!(node instanceof State)) throw new Error('only state objects can be passed into combineNodes');
+    if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
 
     if (node.getParent() === null) {
       // only one node can be the root
@@ -82,48 +90,59 @@ combineNodes = (...args) => {
     }
   }) 
 
-  // build silo object
+  // now we can more easily build the silo object
   if (!hashTable.root) {
-    //problem we must address... 
+    //problem we must address... ?
     throw new Error('at least one state node must have a null parent');
   }
 
-  // recursively map to the silo
-  function mapToSilo(state) {
-    // if a piece of state has no children: base case
-    if (!hashTable[state]) return;
+  // recursively map to the silo (called below)
+  function mapToSilo(node = 'root', parent = null) {
+
+    // determine if node variable is root
+    const nodeName = (node === 'root') ? node : node.getName();
+
+    // if a piece of state has no children: recursive base case
+    if (!hashTable[nodeName]) return;
 
     const allChildren = {};
-    
+
     // inspect all children of the current state node
-    hashTable[state].forEach(child => {
+    hashTable[nodeName].forEach(child => {
 
-      // add child to the return object
-      allChildren[child.getName()] = {
-        value: child.getState(),
-        methods: {}
-      }
+      const nodeVal = {};
+      allChildren[child.getName()] = new siloNode(nodeVal, parent);
+      const thisStateNode = child;
+      const thisSiloNode = allChildren[child.getName()];
+      const stateObj = child.getState();
 
-      //recurse to look for grandchildren
-      const grandChild = mapToSilo(child.getName());
-      if (grandChild) {
-        Object.keys(grandChild).forEach(key => {
-          allChildren[child.getName()].value[key] = grandChild[key];
+      // create siloNodes for all the variables in the child state node
+      Object.keys(stateObj).forEach(varName => {
+        nodeVal[varName] = new siloNode(stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+      })
+
+      // recurse for grandbabiessss
+      const babies = mapToSilo(thisStateNode, thisSiloNode);
+      if (babies) {
+        Object.keys(babies).forEach(baby => {
+          nodeVal[baby] = babies[baby];
         })
       }
-
     })
     return allChildren;
   }
 
-  const temp = mapToSilo('root');
-  // should only be a single key
+  // initiate recurse function
+  const temp = mapToSilo();
+
+  // will always only be a single key (the root) that is added into the silo
   Object.keys(temp).forEach(key => {
     silo[key] = temp[key];
   });
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
+// console.log(silo.AppState);
 
 module.exports = {
   silo,
