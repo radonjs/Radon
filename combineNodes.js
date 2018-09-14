@@ -1,7 +1,7 @@
 // import state class for instanceof check
 const StateNode = require('./stateNode.js');
 
-// ==================> FOR TESTING ONLY <=================== \\
+// ==================> SILO TESTING ONLY <=================== \\
 
 // const AppState = new StateNode('AppState');
 // // AppState.setName('AppState') -> optional if not set in constructor
@@ -35,35 +35,102 @@ const StateNode = require('./stateNode.js');
 //   butt: 'Butt'
 // })
 
-//==================> TESTING CONTENT ENDED <===================\\
+//==================> SILO TESTING CONTENT ENDED <===================\\
 
 class siloNode {
   constructor(val, parent = null, modifiers = {}) {
     this.value = val;
     this.modifiers = modifiers;
+    this.queue = [];
     this.subscribers = [];
     this.parent = parent; // silo node
 
+    // binds
     this.linkModifiers = this.linkModifiers.bind(this);
+    this.runModifiers = this.runModifiers.bind(this);
+
+    // run
     this.linkModifiers(this.modifiers);
+    this.runQueue = this.runModifiers();
   }
+
+  runModifiers() {
+    let running = false; // prevents multiple calls from being made if already running
+
+    async function run() {
+      if (running === false) { // prevents multiple calls from being made if already running
+        running = true;
+  
+        while (this.queue.length > 0) {
+          this.value = await this.queue.shift()();
+          // tell subscribers!!!
+          console.log("in while loop", this.value); // test purposes only
+        }              
+      } else {
+        return 'in progress...';
+      }
+    }
+    return run;
+  };
 
   linkModifiers(stateModifiers) {
     const that = this;
+    // looping through every modifier added by the dev
     Object.keys(stateModifiers).forEach(modifierKey => {
       const modifier = stateModifiers[modifierKey];
+
       if (typeof modifier !== 'function' ) throw new TypeError(); 
       else {
+        // wrap the dev's modifier function so we can pass the current node value into it
+        const linkedModifier = async (payload) => await modifier(that.value, payload);
+
+        // the function that will be called when the dev tries to call their modifier
         stateModifiers[modifierKey] = payload => {
-          that.value = modifier(that.value, payload);
-          // tell subs
+          // wrap the linkedModifier again so that it can be added to the async queue without being invoked
+          const callback = async () => await linkedModifier(payload);
+          that.queue.push(callback);
+          that.runQueue();
         }
       }
     })
   }
 }
 
-// ====> MEH <==== \\
+// ===========> async TEST stuff <========== \\
+
+// function delay(time) {
+//   return new Promise((resolve, reject) => {
+//     setTimeout(resolve, time);
+//   })
+// }
+
+// const nodeA = new siloNode(5, null, {
+//   increment: (current, payload) => {
+//     return current + payload;
+//   },
+
+//   asyncIncrement: (current, payload) => {
+//     return delay(500)
+//     .then(() => {
+//       const temp = current + payload;
+//       return temp;
+//     });
+//   }
+// });
+
+// console.log(nodeA.value);
+// nodeA.modifiers.asyncIncrement(10);
+// nodeA.modifiers.increment(12);
+
+// setTimeout(() => {
+//   console.log(nodeA.value);
+// }, 800);
+
+// ===========> async TEST stuff end <========== \\
+
+
+
+
 
 const silo = {};
 
