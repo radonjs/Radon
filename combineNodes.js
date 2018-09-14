@@ -15,8 +15,8 @@ const StateNode = require('./stateNode.js');
 
 // AppState.initializeModifiers({
 //   age: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
+//     incrementAge: (current, payload) => {
+//       return current + payload;
 //     }
 //   }
 // });
@@ -28,28 +28,12 @@ const StateNode = require('./stateNode.js');
 //   nav: 'Nav'
 // })
 
-// NavState.initializeModifiers({
-//   nav: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
-//     }
-//   }
-// });
-
 // const ButtState = new StateNode('ButtState');
 // ButtState.setParent('NavState');
 
 // ButtState.initializeState({
 //   butt: 'Butt'
 // })
-
-// ButtState.initializeModifiers({
-//   butt: {
-//     incrementAge: (payload, current, next) => {
-//       next(current + 1);
-//     }
-//   }
-// });
 
 //==================> TESTING CONTENT ENDED <===================\\
 
@@ -78,6 +62,8 @@ class siloNode {
     })
   }
 }
+
+// ====> MEH <==== \\
 
 const silo = {};
 
