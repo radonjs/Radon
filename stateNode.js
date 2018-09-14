@@ -23,11 +23,6 @@ class StateNode {
     });
   }
 
-  // linkStateModifier(stateModifier) {
-  //   if (typeof stateModifier !== 'function' ) throw new TypeError(); 
-  //   return (payload) => stateModifier(currentState, payload);  
-  // }
-
   initializeModifiers(modifiers) {
     if (typeof modifiers !== 'object') throw new Error('input must be an object');
     Object.keys(modifiers).forEach(key => {
@@ -35,12 +30,6 @@ class StateNode {
         value: this.state[key] ? this.state[key].value : null, // could be undefined
         modifiers: modifiers[key]
       }
-
-      // run modifiers through middleware
-      // we still need middleware for objects that take an index or key
-      // Object.keys(this.state[key].modifiers).forEach(modifier => {
-      //   this.state[key].modifiers.modifier = this.linkStateModifier(modifier);
-      // })
     });
   }
 

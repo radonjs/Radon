@@ -59,10 +59,25 @@ class siloNode {
     this.modifiers = modifiers;
     this.subscribers = [];
     this.parent = parent; // silo node
+
+    this.linkModifiers = this.linkModifiers.bind(this);
+    this.linkModifiers(this.modifiers);
+  }
+
+  linkModifiers(stateModifiers) {
+    const that = this;
+    Object.keys(stateModifiers).forEach(modifierKey => {
+      const modifier = stateModifiers[modifierKey];
+      if (typeof modifier !== 'function' ) throw new TypeError(); 
+      else {
+        stateModifiers[modifierKey] = payload => {
+          that.value = modifier(that.value, payload);
+          // tell subs
+        }
+      }
+    })
   }
 }
-
-// PROB: wanting a stateless root??
 
 const silo = {};
 
@@ -91,12 +106,12 @@ combineNodes = (...args) => {
 
   // now we can more easily build the silo object
   if (!hashTable.root) {
-    //problem we must address... 
+    //problem we must address... ?
     throw new Error('at least one state node must have a null parent');
   }
 
-  // recursively map to the silo
-  function mapToSilo(node = 'root', parent) {
+  // recursively map to the silo (called below)
+  function mapToSilo(node = 'root', parent = null) {
 
     // determine if node variable is a string or siloNode
     let nodeName;
@@ -112,7 +127,7 @@ combineNodes = (...args) => {
     hashTable[nodeName].forEach(child => {
 
       const nodeVal = {};
-      allChildren[child.getName()] = new siloNode(nodeVal, node === 'root' ? null : parent);
+      allChildren[child.getName()] = new siloNode(nodeVal, parent);
       const thisStateNode = child;
       const thisSiloNode = allChildren[child.getName()];
       const stateObj = child.getState();
