@@ -113,10 +113,8 @@ combineNodes = (...args) => {
   // recursively map to the silo (called below)
   function mapToSilo(node = 'root', parent = null) {
 
-    // determine if node variable is a string or siloNode
-    let nodeName;
-    if (node === 'root') nodeName = node;
-    else nodeName = node.getName();
+    // determine if node variable is root
+    const nodeName = (node === 'root') ? node : node.getName();
 
     // if a piece of state has no children: recursive base case
     if (!hashTable[nodeName]) return;
