@@ -3,53 +3,52 @@ const StateNode = require('./stateNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
-// const AppState = new StateNode('AppState');
-// // AppState.setName('AppState') -> optional if not set in constructor
-// // AppState.setParent(null);
+const AppState = new StateNode('AppState');
+// AppState.name = 'AppState'; -> optional if not set in constructor
 
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: {one:1, two:2}
-// })
+AppState.initializeState({
+  name: 'Han',
+  age: 25,
+  cart: {one:1, two:2}
+})
 
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   },
-//   cart: {
-//     increment: (current, index, payload) => {
-//       return ++current;
-//     }
-//   }
-// });
+AppState.initializeModifiers({
+  age: {
+    incrementAge: (current, payload) => {
+      return current + payload;
+    }
+  },
+  cart: {
+    increment: (current, index, payload) => {
+      return ++current;
+    }
+  }
+});
 
-// const NavState = new StateNode('NavState');
-// NavState.setParent('AppState');
+const NavState = new StateNode('NavState');
+NavState.parent = 'AppState';
 
-// NavState.initializeState({
-//   nav: 'Nav'
-// })
+NavState.initializeState({
+  nav: 'Nav'
+})
 
-// const ButtState = new StateNode('ButtState');
-// ButtState.setParent('NavState');
+const ButtState = new StateNode('ButtState');
+ButtState.parent = 'NavState';
 
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
+ButtState.initializeState({
+  butt: 'Butt'
+})
 
 //==================> SILO TESTING ENDED <===================\\
 
 class siloNode {
   constructor(val, parent = null, modifiers = {}, isAnObject = false) {
-    this.value = val;
-    this.modifiers = modifiers;
-    this.queue = [];
-    this.subscribers = [];
-    this.parent = parent; // circular silo node
-    this.isAnObject = isAnObject; // controls the type of middleware
+    this._value = val;
+    this._modifiers = modifiers;
+    this._queue = [];
+    this._subscribers = [];
+    this._parent = parent; // circular silo node
+    this._isAnObject = isAnObject; // controls the type of middleware
 
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
@@ -58,6 +57,26 @@ class siloNode {
     // invoke functions
     this.linkModifiers(this.modifiers);
     this.runQueue = this.runModifiers();
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  get modifiers() {
+    return this._modifiers;
+  }
+
+  get queue() {
+    return this._queue;
+  }
+
+  get parent() {
+    return this._parent;
+  }
+
+  get isAnObject() {
+    return this._isAnObject;
   }
 
   runModifiers() {
@@ -190,13 +209,13 @@ combineNodes = (...args) => {
     // all nodes must be an instance of state node (must import state class)
     if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
 
-    if (node.getParent() === null) {
+    if (node.parent === null) {
       // only one node can be the root
       if (!hashTable.root) hashTable.root = [node];
       else throw new Error('only one state node can have null parent');
     } else {
-      if (!hashTable[node.getParent()]) hashTable[node.getParent()] = [node];
-      else hashTable[node.getParent()].push(node);
+      if (!hashTable[node.parent]) hashTable[node.parent] = [node];
+      else hashTable[node.parent].push(node);
     }
   }) 
 
@@ -210,7 +229,7 @@ combineNodes = (...args) => {
   function mapToSilo(node = 'root', parent = null) {
 
     // determine if node variable is root
-    const nodeName = (node === 'root') ? node : node.getName();
+    const nodeName = (node === 'root') ? node : node.name;
 
     // if a piece of state has no children: recursive base case
     if (!hashTable[nodeName]) return;
@@ -221,10 +240,10 @@ combineNodes = (...args) => {
     hashTable[nodeName].forEach(child => {
 
       const nodeVal = {};
-      allChildren[child.getName()] = new siloNode(nodeVal, parent);
+      allChildren[child.name] = new siloNode(nodeVal, parent);
       const thisStateNode = child;
-      const thisSiloNode = allChildren[child.getName()];
-      const stateObj = child.getState();
+      const thisSiloNode = allChildren[child.name];
+      const stateObj = child.state;
 
       // create siloNodes for all the variables in the child state node
       Object.keys(stateObj).forEach(varName => {
@@ -256,7 +275,7 @@ combineNodes = (...args) => {
   });
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
+combineNodes(ButtState, NavState, AppState); // testing purposes
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
