@@ -3,47 +3,48 @@ const StateNode = require('./stateNode.js');
 
 // ==================> SILO TESTING ONLY <=================== \\
 
-// const AppState = new StateNode('AppState');
-// // AppState.setName('AppState') -> optional if not set in constructor
-// // AppState.setParent(null);
+const AppState = new StateNode('AppState');
+// AppState.setName('AppState') -> optional if not set in constructor
+// AppState.setParent(null);
 
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: []
-// })
+AppState.initializeState({
+  name: 'Han',
+  age: 25,
+  cart: {one:1, two:[1,2]}
+})
 
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   }
-// });
+AppState.initializeModifiers({
+  age: {
+    incrementAge: (current, payload) => {
+      return current + payload;
+    }
+  }
+});
 
-// const NavState = new StateNode('NavState');
-// NavState.setParent('AppState');
+const NavState = new StateNode('NavState');
+NavState.setParent('AppState');
 
-// NavState.initializeState({
-//   nav: 'Nav'
-// })
+NavState.initializeState({
+  nav: 'Nav'
+})
 
-// const ButtState = new StateNode('ButtState');
-// ButtState.setParent('NavState');
+const ButtState = new StateNode('ButtState');
+ButtState.setParent('NavState');
 
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
+ButtState.initializeState({
+  butt: 'Butt'
+})
 
 //==================> SILO TESTING CONTENT ENDED <===================\\
 
 class siloNode {
-  constructor(val, parent = null, modifiers = {}) {
+  constructor(val, parent = null, modifiers = {}, isAnObject = false) {
     this.value = val;
     this.modifiers = modifiers;
     this.queue = [];
     this.subscribers = [];
     this.parent = parent; // silo node
+    this.isAnObject = isAnObject;
 
     // binds
     this.linkModifiers = this.linkModifiers.bind(this);
@@ -74,7 +75,9 @@ class siloNode {
   };
 
   linkModifiers(stateModifiers) {
+    if (!stateModifiers) return;
     const that = this;
+
     // looping through every modifier added by the dev
     Object.keys(stateModifiers).forEach(modifierKey => {
       const modifier = stateModifiers[modifierKey];
@@ -82,7 +85,7 @@ class siloNode {
       if (typeof modifier !== 'function' ) throw new TypeError(); 
       else {
         // wrap the dev's modifier function so we can pass the current node value into it
-        const linkedModifier = async (payload) => await modifier(that.value, payload);
+        const linkedModifier = async (payload) => await modifier(that.value, payload); 
 
         // the function that will be called when the dev tries to call their modifier
         stateModifiers[modifierKey] = payload => {
@@ -128,6 +131,31 @@ class siloNode {
 
 // ===========> async TEST stuff end <========== \\
 
+// handles nested objects in state by converting every key/index into a node
+// also it is recursive
+function handleNestedObject(objName, obj, parent) {
+  console.log(obj);
+  const objChildren = {};
+  // the true argument in siloNode indicates that this is a parent object node
+  const node = new siloNode(objChildren, parent, obj.modifiers, true);
+  const keys = Array.isArray(obj.value) ? obj : Object.keys(obj.value);
+  
+  if (Array.isArray(obj.value) && obj.value.length > 0) {
+    obj.value.forEach((val, i) => {
+      if (typeof val === 'object') objChildren[`${objName}_${i}`] = handleNestedObject(`${objName}_${i}`, {value: val}, node);
+      else objChildren[`${objName}_${i}`] = new siloNode(val, node);
+    })
+  } 
+  
+  else if (keys.length > 0) {
+    keys.forEach(key => {
+      if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = handleNestedObject(key, {value: obj.value[key]}, node);
+      else objChildren[`${objName}_${key}`] = new siloNode(obj.value[key], node);
+    })
+  }
+
+  return node;
+}
 
 
 
@@ -185,7 +213,12 @@ combineNodes = (...args) => {
 
       // create siloNodes for all the variables in the child state node
       Object.keys(stateObj).forEach(varName => {
-        nodeVal[varName] = new siloNode(stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+        // handles non primitive data types
+        if (typeof stateObj[varName].value === 'object') {
+          nodeVal[varName] = handleNestedObject(varName, stateObj[varName], thisSiloNode);
+        }
+        // primitives only
+        else nodeVal[varName] = new siloNode(stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
       })
 
       // recurse for grandbabiessss
@@ -208,8 +241,8 @@ combineNodes = (...args) => {
   });
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
-// console.log(silo.AppState);
+combineNodes(ButtState, NavState, AppState); // testing purposes
+console.log(silo.AppState.value.cart.value);
 
 module.exports = {
   silo,
