@@ -1,0 +1,26 @@
+{
+  "name": "radonjs",
+  "version": "1.0.0",
+  "description": "Object oriented state container for Javascript applications.",
+  "main": "combineNodes.js",
+  "scripts": {
+    "test": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joshua-Wright76/Object-Oriented-Async-State-Management.git"
+  },
+  "author": "Mad-Eye Moody",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joshua-Wright76/Object-Oriented-Async-State-Management/issues"
+  },
+  "homepage": "https://github.com/Joshua-Wright76/Object-Oriented-Async-State-Management#readme",
+  "dependencies": {
+    "jest": "^23.6.0",
+    "radon": "^0.1.0"
+  },
+  "devDependencies": {
+    "jest": "^23.6.0"
+  }
+}
