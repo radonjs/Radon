@@ -1,0 +1,23 @@
+{
+  "name": "radonjs",
+  "version": "1.0.0",
+  "description": "Radon is an object-oriented state management framework for JavaScript applications.",
+  "main": "stateNode.js",
+  "scripts": {
+    "test": "jest stateNode.test.js --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joshua-Wright76/Radon.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joshua-Wright76/Radon/issues"
+  },
+  "homepage": "https://github.com/Joshua-Wright76/Radon#readme",
+  "dependencies": {
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0"
+  }
+}
