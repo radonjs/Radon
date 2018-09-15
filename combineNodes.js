@@ -20,7 +20,7 @@ const StateNode = require('./stateNode.js');
 //     }
 //   },
 //   cart: {
-//     increment: (current, payload) => {
+//     increment: (current, index, payload) => {
 //       return ++current;
 //     }
 //   }

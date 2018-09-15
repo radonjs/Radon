@@ -89,10 +89,7 @@ module.exports = StateNode;
 //   },
 //   cart: {
     // incrementShirts: (current, index, payload) => {
-    //   return {
-    //     value: ++current,
-    //     index: index
-    //   }
+    //  return ++current,
     // }
 //   }
 // });
