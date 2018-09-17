@@ -9,6 +9,8 @@ class SiloNode {
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
     this.runModifiers = this.runModifiers.bind(this);
+    this.notifySubscribers = this.notifySubscribers.bind(this);
+    this.getState = this.getState.bind(this);
 
     // invoke functions
     this.linkModifiers(this.modifiers);
@@ -31,6 +33,17 @@ class SiloNode {
     return this._parent;
   }
 
+  get subscribers() {
+    return this._subscribers;
+  }
+
+  notifySubscribers() {
+    if (this.subscribers.length === 0) return;
+    this.subscribers.forEach(func => {
+      func(this.value);
+    })
+  }
+
   runModifiers() {
     let running = false; // prevents multiple calls from being made if already running
 
@@ -40,15 +53,15 @@ class SiloNode {
   
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
-          // tell subscribers!!!
-          console.log("in while loop", this.value); // test purposes only
+          this.notifySubscribers();
+          // console.log("in while loop", this.value); // test purposes only
         }              
       } else {
         return 'in progress...';
       }
     }
     return run;
-  };
+  }
 
   linkModifiers(stateModifiers) {
     if (!stateModifiers) return;
@@ -88,6 +101,10 @@ class SiloNode {
         }
       }
     })
+  }
+
+  getState() {
+
   }
 }
 

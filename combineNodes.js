@@ -1,10 +1,10 @@
 // import state class for instanceof check
-const StateNode = require('./stateNode.js');
+const InitialNode = require('./initialNode.js');
 const SiloNode = require('./SiloNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
-// const AppState = new StateNode('AppState');
+// const AppState = new InitialNode('AppState');
 // // AppState.name = 'AppState'; -> optional if not set in constructor
 
 // AppState.initializeState({
@@ -29,14 +29,14 @@ const SiloNode = require('./SiloNode.js');
 //   }
 // });
 
-// const NavState = new StateNode('NavState');
+// const NavState = new InitialNode('NavState');
 // NavState.parent = 'AppState';
 
 // NavState.initializeState({
 //   nav: 'Nav'
 // })
 
-// const ButtState = new StateNode('ButtState');
+// const ButtState = new InitialNode('ButtState');
 // ButtState.parent = 'NavState';
 
 // ButtState.initializeState({
@@ -104,8 +104,8 @@ function handleNestedObject(objName, obj, parent) {
   return node;
 }
 
-// combineNodes takes all of the stateNodes created by the developer. It then creates SiloNodes from the
-// stateNodes and organizes them into a single nested object, the silo
+// combineNodes takes all of the InitialNodes created by the developer. It then creates SiloNodes from the
+// InitialNodes and organizes them into a single nested object, the silo
 
 combineNodes = (...args) => {
   // you called this function without passing stuff? Weird
@@ -115,7 +115,7 @@ combineNodes = (...args) => {
   const hashTable = {};
   args.forEach(node => {
     // all nodes must be an instance of state node (must import state class)
-    if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
+    if (!(node instanceof InitialNode)) throw new Error('only state objects can be passed into combineNodes');
 
     if (node.parent === null) {
       // only one node can be the root
@@ -149,7 +149,7 @@ combineNodes = (...args) => {
 
       const nodeVal = {};
       allChildren[child.name] = new SiloNode(nodeVal, parent);
-      const thisStateNode = child;
+      const thisInitialNode = child;
       const thisSiloNode = allChildren[child.name];
       const stateObj = child.state;
 
@@ -164,7 +164,7 @@ combineNodes = (...args) => {
       })
 
       // recurse for grandbabiessss
-      const babies = mapToSilo(thisStateNode, thisSiloNode);
+      const babies = mapToSilo(thisInitialNode, thisSiloNode);
       if (babies) {
         Object.keys(babies).forEach(baby => {
           nodeVal[baby] = babies[baby];
