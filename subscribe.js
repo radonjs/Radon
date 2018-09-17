@@ -12,16 +12,13 @@ const subscribe = (component, name) => {
         let children;
         if(typeof head.value !== 'object') return null;
         else children = head.value;
-        console.log('keys: ', Object.keys(children));
 
         for(let i in children){
           console.log(i, name);
             if(i === name){
-                console.log('found it!');
                 return children[i]
             } else {
                 let foundNode = searchSilo(children[i], name);
-                console.log('coming back up. foundNode is: ', foundNode);
                 if(!!foundNode){return foundNode};
             }
         }
