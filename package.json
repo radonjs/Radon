@@ -1,5 +1,5 @@
 {
-  "name": "radonjs",
+  "name": "radon-js",
   "version": "1.0.1",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
   "main": "stateNode.js",
