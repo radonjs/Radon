@@ -1,24 +1,19 @@
 class StateNode {
   constructor(name) {
-    this.name = name;
-    this.state = {};
-    this.parent = null;
+    this._name = name;
+    this._state = {};
+    this._parent = null;
 
     this.initializeState = this.initializeState.bind(this);
     this.initializeModifiers = this.initializeModifiers.bind(this);
-    this.setName = this.setName.bind(this);
-    this.getName = this.getName.bind(this);
-    this.setParent = this.setParent.bind(this);
-    this.getParent = this.getParent.bind(this);
-    this.getState = this.getState.bind(this);
   }
 
   initializeState(initialState) {
-    if (typeof this.state !== 'object') throw new Error('input must be an object');
+    if (typeof this._state !== 'object') throw new Error('input must be an object');
     Object.keys(initialState).forEach(key => {
-      this.state[key] = {
+      this._state[key] = {
         value: initialState[key],
-        modifiers: this.state[key] ? this.state[key].modifiers : null // could be undefined
+        modifiers: this._state[key] ? this._state[key].modifiers : null // could be undefined
       }
     });
   }
@@ -26,31 +21,31 @@ class StateNode {
   initializeModifiers(modifiers) {
     if (typeof modifiers !== 'object') throw new Error('input must be an object');
     Object.keys(modifiers).forEach(key => {
-      this.state[key] = {
-        value: this.state[key] ? this.state[key].value : null, // could be undefined
+      this._state[key] = {
+        value: this._state[key] ? this._state[key].value : null, // could be undefined
         modifiers: modifiers[key]
       }
     });
   }
 
-  setName(name) {
-    this.name = name;
+  set name(name) {
+    this._name = name;
   }
 
-  getName() {
-    return this.name;
+  get name() {
+    return this._name;
   }
 
-  setParent(parent) {
-    this.parent = parent;
+  set parent(parent) {
+    this._parent = parent;
   }
 
-  getParent() {
-    return this.parent;
+  get parent() {
+    return this._parent;
   }
 
-  getState() {
-    return this.state;
+  get state() {
+    return this._state;
   }
 }
 
@@ -60,9 +55,9 @@ module.exports = StateNode;
 
 // import State from _____
 
-// const AppState = new State('AppState');
-// AppState.setName('AppState') -> optional if not set in constructor
-// AppState.setParent('ParentNode');
+// const AppState = new StateNode('AppState');
+// // AppState.name = 'AppState'; -> optional if not set in constructor
+// AppState.parent = 'ParentNode';
 
 // AppState.initializeState({
 //   name: 'Han',
@@ -72,24 +67,24 @@ module.exports = StateNode;
 
 // AppState.initializeModifiers({
 //   name: {
-//     updateName: (currentState, payload) => {
-//       update(payload);
+//     updateName: (current, payload) => {
+//       return payload + current;
 //     },
-//     resetName: (currentState, payload) => {
-//       update(null);
+//     resetName: (current, payload) => {
+//       return null;
 //     }
 //   },
 //   age: {
-//     incrementAge: (currentState, payload) => {
-//       update(currentState + 1);
+//     incrementAge: (current, payload) => {
+//       return current + 1;
 //     },
-//     decrementAge: (currentState, payload) => {
-//       update(currentState - 1);
+//     decrementAge: (current, payload) => {
+//       return current - 1;
 //     }
 //   },
 //   cart: {
-//     incrementShirts: (currentState, payload, index) => {
-//       update(payload);
+//     incrementShirts: (current, index, payload) => {
+//       return ++current;
 //     }
 //   }
 // });
