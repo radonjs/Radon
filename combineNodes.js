@@ -22,6 +22,9 @@ const SiloNode = require('./SiloNode.js');
 //   cart: {
 //     increment: (current, index, payload) => {
 //       return ++current;
+//     },
+//     addItem: (current, payload) => {
+//       return current.push(payload);
 //     }
 //   }
 // });
