@@ -45,6 +45,7 @@ class SiloNode {
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
     this.subscribers.forEach(func => {
+      if (typeof func !== 'function') throw new Error('subscriber array must only contain functions');
       func(this.value);
     })
   }
@@ -131,12 +132,12 @@ class SiloNode {
       // loop through object values currently stored as nodes
       Object.keys(obj.value).forEach(key => {
         const childObj = obj.value[key];
-        //get keyName
+        //get keyName from the naming convention
         const extractedKey = key.slice(name.length + 1);
         if (childObj.type === 'OBJECT') {
           newObject[extractedKey] = handleObject(key, childObj);
         } else if (childObj.type === 'ARRAY') {
-          newObject[extractedKey] = handleObject(key, childObj);
+          newObject[extractedKey] = handleArray(key, childObj);
         } else if (childObj.type === 'PRIMITIVE') {
           newObject[extractedKey] = childObj.value;
         }
@@ -153,7 +154,7 @@ class SiloNode {
       Object.keys(obj.value).forEach((key, i) => {
         const childObj = obj.value[key];
         if (childObj.type === 'ARRAY') {
-          newArray.push(handleObject(key, childObj));
+          newArray.push(handleArray(`${name}_${i}`, childObj));
         } else if (childObj.type === 'OBJECT') {
           newArray.push(handleObject(`${name}_${i}`, obj))
         } else if (childObj.type === 'PRIMITIVE') {
