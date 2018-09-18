@@ -4,43 +4,43 @@ const SiloNode = require('./SiloNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
-const AppState = new StateNode('AppState');
-// AppState.name = 'AppState'; -> optional if not set in constructor
+// const AppState = new StateNode('AppState');
+// // AppState.name = 'AppState'; -> optional if not set in constructor
 
-AppState.initializeState({
-  name: 'Han',
-  age: 25,
-  cart: {one:[1,2,3], two:2}
-})
+// AppState.initializeState({
+//   name: 'Han',
+//   age: 25,
+//   cart: {one:[1,2,3], two:2}
+// })
 
-AppState.initializeModifiers({
-  age: {
-    incrementAge: (current, payload) => {
-      return current + payload;
-    }
-  },
-  cart: {
-    increment: (current, index, payload) => {
-      return ++current;
-    },
-    addItem: (current, payload) => {
-      return current.push(payload);
-    }
-  }
-});
+// AppState.initializeModifiers({
+//   age: {
+//     incrementAge: (current, payload) => {
+//       return current + payload;
+//     }
+//   },
+//   cart: {
+//     increment: (current, index, payload) => {
+//       return ++current;
+//     },
+//     addItem: (current, payload) => {
+//       return current.push(payload);
+//     }
+//   }
+// });
 
-const NavState = new StateNode('NavState');
-NavState.parent = 'AppState';
+// const NavState = new StateNode('NavState');
+// NavState.parent = 'AppState';
 
-NavState.initializeState({
-  nav: 'Nav'
-})
+// NavState.initializeState({
+//   nav: 'Nav'
+// })
 
-const ButtState = new StateNode('ButtState');
-ButtState.parent = 'NavState';
+// const ButtState = new StateNode('ButtState');
+// ButtState.parent = 'NavState';
 
-ButtState.initializeState({
-  butt: 'Butt'
+// ButtState.initializeState({
+//   butt: 'Butt'
 })
 
 //==================> SILO TESTING ENDED <===================\\
