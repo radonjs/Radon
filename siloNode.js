@@ -118,12 +118,6 @@ class SiloNode {
       })
     }
 
-    function bindModifiers(value, modifiers) {
-      if (!modifiers || Object.keys(modifiers).length === 0) return value;
-      // do magic
-      return value;
-    }
-
     function handleObject(name, obj) {
       // get the original type of object
       const type = obj.type; 
@@ -168,7 +162,13 @@ class SiloNode {
       const node = currentNode.value[key];
       if (node.type === 'OBJECT') state[key] = handleObject(key, node);
       else if (node.type === 'ARRAY') state[key] = handleArray(key, node);
-      else if (node.type === 'PRIMITIVE') state[key] = bindModifiers(node.value, node.modifiers);
+      else if (node.type === 'PRIMITIVE') state[key] = node.value;
+
+      if (node.modifiers) {
+        Object.keys(node.modifiers).forEach(modifier => {
+          state[modifier] = node.modifiers[modifier];
+        })
+      }
     })
 
     return state;

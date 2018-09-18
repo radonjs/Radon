@@ -193,9 +193,9 @@ combineNodes = (...args) => {
   });
 }
 
-combineNodes(ButtState, NavState, AppState); // testing purposes
+// combineNodes(ButtState, NavState, AppState); // testing purposes
 // console.log(silo.AppState.value.NavState.value.ButtState.getState());
-silo.AppState.value.NavState.value.ButtState.getState();
+// silo.AppState.value.NavState.value.ButtState.getState();
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
