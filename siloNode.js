@@ -50,7 +50,7 @@ class SiloNode {
     if (this.subscribers.length === 0) return;
     this.subscribers.forEach(func => {
       if (typeof func !== 'function') throw new Error('subscriber array must only contain functions');
-      func(this.value);
+      func(this.getState(this));
     })
   }
 
