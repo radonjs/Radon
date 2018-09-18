@@ -1,10 +1,11 @@
 class SiloNode {
-  constructor(val, parent = null, modifiers = {}) {
+  constructor(val, parent = null, modifiers = {}, type = 'PRIMITIVE') {
     this._value = val;
     this._modifiers = modifiers;
     this._queue = [];
     this._subscribers = [];
     this._parent = parent; // circular silo node
+    this._type = type;
 
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
@@ -35,6 +36,10 @@ class SiloNode {
 
   get subscribers() {
     return this._subscribers;
+  }
+
+  get type() {
+    return this._type;
   }
 
   notifySubscribers() {
@@ -103,8 +108,59 @@ class SiloNode {
     })
   }
 
-  getState() {
+  getState(currentNode = this) {
+    const state = {};
+    // recurse to root and collect all variables/modifiers from parents
+    if (currentNode.parent !== 'root' && currentNode.parent !== null) {
+      const parentData = this.getState(currentNode.parent);
+      Object.keys(parentData).forEach(key => {
+        state[key] = parentData[key];
+      })
+    }
 
+    function handleObject(name, obj) {
+      // get the original type of object
+      const type = obj.type; 
+
+      if (type === 'ARRAY') {
+        const newArray = [];
+        // loop through array indices currently stored as nodes
+        Object.keys(obj.value).forEach(key => {
+          const childObj = obj.value[key];
+          if (childObj.type === 'OBJECT' || childObj.type === 'ARRAY') {
+            // recurse for nested objects
+            newArray.push(handleObject(key, childObj));
+          } else if (childObj.type === 'PRIMITIVE') {
+            newArray.push(childObj.value);
+          }
+        })
+        return newArray;
+      }
+
+      // for plain objects
+      const newObject = {};
+      // loop through object values currently stored as nodes
+      Object.keys(obj.value).forEach(key => {
+        const childObj = obj.value[key];
+        //get keyName
+        const extractedKey = key.slice(name.length + 1);
+        if (childObj.type === 'OBJECT' || childObj.type === 'ARRAY') {
+          // recurse for nested objects
+          newObject[extractedKey] = handleObject(key, childObj);
+        } else if (childObj.type === 'PRIMITIVE') {
+          newObject[extractedKey] = childObj.value;
+        }
+      })
+      return newObject;
+    }
+
+    Object.keys(currentNode.value).forEach(key => {
+      const type = currentNode.value[key].type;
+      if (type === 'OBJECT' || type === 'ARRAY') state[key] = handleObject(key, currentNode.value[key]);
+      else if (type === 'PRIMITIVE') state[key] = currentNode.value[key].value;
+    })
+
+    return state;
   }
 }
 

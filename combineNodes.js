@@ -1,47 +1,47 @@
 // import state class for instanceof check
-const InitialNode = require('./initialNode.js');
+const StateNode = require('./stateNode.js');
 const SiloNode = require('./SiloNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
-// const AppState = new InitialNode('AppState');
-// // AppState.name = 'AppState'; -> optional if not set in constructor
+const AppState = new StateNode('AppState');
+// AppState.name = 'AppState'; -> optional if not set in constructor
 
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: {one:1, two:2}
-// })
+AppState.initializeState({
+  name: 'Han',
+  age: 25,
+  cart: {one:[1,2,3], two:2}
+})
 
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   },
-//   cart: {
-//     increment: (current, index, payload) => {
-//       return ++current;
-//     },
-//     addItem: (current, payload) => {
-//       return current.push(payload);
-//     }
-//   }
-// });
+AppState.initializeModifiers({
+  age: {
+    incrementAge: (current, payload) => {
+      return current + payload;
+    }
+  },
+  cart: {
+    increment: (current, index, payload) => {
+      return ++current;
+    },
+    addItem: (current, payload) => {
+      return current.push(payload);
+    }
+  }
+});
 
-// const NavState = new InitialNode('NavState');
-// NavState.parent = 'AppState';
+const NavState = new StateNode('NavState');
+NavState.parent = 'AppState';
 
-// NavState.initializeState({
-//   nav: 'Nav'
-// })
+NavState.initializeState({
+  nav: 'Nav'
+})
 
-// const ButtState = new InitialNode('ButtState');
-// ButtState.parent = 'NavState';
+const ButtState = new StateNode('ButtState');
+ButtState.parent = 'NavState';
 
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
+ButtState.initializeState({
+  butt: 'Butt'
+})
 
 //==================> SILO TESTING ENDED <===================\\
 
@@ -84,10 +84,20 @@ const silo = {};
 // IMPORTANT nested object nodes are named after their parent and the key: ex: cart_one
 function handleNestedObject(objName, obj, parent) {
   const objChildren = {};
-  const node = new SiloNode(objChildren, parent, obj.modifiers, true);   // the true argument indicates that this is a parent object node
-  const keys = Array.isArray(obj.value) ? obj : Object.keys(obj.value);
+  let type, keys;
+
+  // determine if array or other object
+  if (Array.isArray(obj.value)) {
+    keys = obj.value;
+    type = 'ARRAY';
+  } else {
+    keys = Object.keys(obj.value);
+    type = 'OBJECT'
+  }
+
+  const node = new SiloNode(objChildren, parent, obj.modifiers, type);
   
-  if (Array.isArray(obj.value) && obj.value.length > 0) {
+  if (Array.isArray(obj.value) && keys.length > 0) {
     obj.value.forEach((val, i) => {
       if (typeof val === 'object') objChildren[`${objName}_${i}`] = handleNestedObject(`${objName}_${i}`, {value: val}, node);
       else objChildren[`${objName}_${i}`] = new SiloNode(val, node);
@@ -104,8 +114,8 @@ function handleNestedObject(objName, obj, parent) {
   return node;
 }
 
-// combineNodes takes all of the InitialNodes created by the developer. It then creates SiloNodes from the
-// InitialNodes and organizes them into a single nested object, the silo
+// combineNodes takes all of the StateNodes created by the developer. It then creates SiloNodes from the
+// StateNodes and organizes them into a single nested object, the silo
 
 combineNodes = (...args) => {
   // you called this function without passing stuff? Weird
@@ -115,7 +125,7 @@ combineNodes = (...args) => {
   const hashTable = {};
   args.forEach(node => {
     // all nodes must be an instance of state node (must import state class)
-    if (!(node instanceof InitialNode)) throw new Error('only state objects can be passed into combineNodes');
+    if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
 
     if (node.parent === null) {
       // only one node can be the root
@@ -148,8 +158,8 @@ combineNodes = (...args) => {
     hashTable[nodeName].forEach(child => {
 
       const nodeVal = {};
-      allChildren[child.name] = new SiloNode(nodeVal, parent);
-      const thisInitialNode = child;
+      allChildren[child.name] = new SiloNode(nodeVal, parent, {}, 'NESTEDSTATE');
+      const thisStateNode = child;
       const thisSiloNode = allChildren[child.name];
       const stateObj = child.state;
 
@@ -164,7 +174,7 @@ combineNodes = (...args) => {
       })
 
       // recurse for grandbabiessss
-      const babies = mapToSilo(thisInitialNode, thisSiloNode);
+      const babies = mapToSilo(thisStateNode, thisSiloNode);
       if (babies) {
         Object.keys(babies).forEach(baby => {
           nodeVal[baby] = babies[baby];
@@ -183,7 +193,9 @@ combineNodes = (...args) => {
   });
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
+combineNodes(ButtState, NavState, AppState); // testing purposes
+// console.log("FIX OBJECT:", silo.AppState.value);
+console.log(silo.AppState.value.NavState.value.ButtState.getState());
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
