@@ -221,7 +221,6 @@ silo.prototype.subscribe = (component, name) => {
         else children = head.value;
 
         for(let i in children){
-          console.log(i, name);
             if(i === name){
                 return children[i]
             } else {
@@ -232,7 +231,7 @@ silo.prototype.subscribe = (component, name) => {
     }
 
     let foundNode = searchSilo(this, name);
-    foundNode._subscribers.push(component)
+    foundNode.subscribers.push(component)
     return foundNode;
     
     //if there's no name assume the name is component name + 'State'

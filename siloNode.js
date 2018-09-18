@@ -34,6 +34,10 @@ class SiloNode {
     return this._parent;
   }
 
+  set subscribers() {
+    return this._subscribers;
+  }
+
   get subscribers() {
     return this._subscribers;
   }
