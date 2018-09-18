@@ -59,7 +59,6 @@ class SiloNode {
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
           this.notifySubscribers();
-          // console.log("in while loop", this.value); // test purposes only
         }              
       } else {
         return 'in progress...';
@@ -118,34 +117,25 @@ class SiloNode {
       })
     }
 
+    function bindModifiers(value, modifiers) {
+      if (!modifiers || Object.keys(modifiers).length === 0) return value;
+      // do magic
+      return value;
+    }
+
     function handleObject(name, obj) {
       // get the original type of object
       const type = obj.type; 
-
-      if (type === 'ARRAY') {
-        const newArray = [];
-        // loop through array indices currently stored as nodes
-        Object.keys(obj.value).forEach(key => {
-          const childObj = obj.value[key];
-          if (childObj.type === 'OBJECT' || childObj.type === 'ARRAY') {
-            // recurse for nested objects
-            newArray.push(handleObject(key, childObj));
-          } else if (childObj.type === 'PRIMITIVE') {
-            newArray.push(childObj.value);
-          }
-        })
-        return newArray;
-      }
-
-      // for plain objects
       const newObject = {};
+
       // loop through object values currently stored as nodes
       Object.keys(obj.value).forEach(key => {
         const childObj = obj.value[key];
         //get keyName
         const extractedKey = key.slice(name.length + 1);
-        if (childObj.type === 'OBJECT' || childObj.type === 'ARRAY') {
-          // recurse for nested objects
+        if (childObj.type === 'OBJECT') {
+          newObject[extractedKey] = handleObject(key, childObj);
+        } else if (childObj.type === 'ARRAY') {
           newObject[extractedKey] = handleObject(key, childObj);
         } else if (childObj.type === 'PRIMITIVE') {
           newObject[extractedKey] = childObj.value;
@@ -154,10 +144,30 @@ class SiloNode {
       return newObject;
     }
 
+    function handleArray(name, obj) {
+      // get the original type of object
+      const type = obj.type; 
+      const newArray = [];
+
+      // loop through array indices currently stored as nodes
+      Object.keys(obj.value).forEach((key, i) => {
+        const childObj = obj.value[key];
+        if (childObj.type === 'ARRAY') {
+          newArray.push(handleObject(key, childObj));
+        } else if (childObj.type === 'OBJECT') {
+          newArray.push(handleObject(`${name}_${i}`, obj))
+        } else if (childObj.type === 'PRIMITIVE') {
+          newArray.push(childObj.value);
+        }
+      })
+      return newArray;
+    }
+
     Object.keys(currentNode.value).forEach(key => {
-      const type = currentNode.value[key].type;
-      if (type === 'OBJECT' || type === 'ARRAY') state[key] = handleObject(key, currentNode.value[key]);
-      else if (type === 'PRIMITIVE') state[key] = currentNode.value[key].value;
+      const node = currentNode.value[key];
+      if (node.type === 'OBJECT') state[key] = handleObject(key, node);
+      else if (node.type === 'ARRAY') state[key] = handleArray(key, node);
+      else if (node.type === 'PRIMITIVE') state[key] = bindModifiers(node.value, node.modifiers);
     })
 
     return state;
