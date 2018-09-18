@@ -16,3 +16,4 @@ improve the speed of state changes in highly nested applications when compared o
 
 Radon also implements native handling of asynchronous state changes using async generators. When state modifiers are called,
 they are added to a running queue of modifiers, which are called in order using generators. This means that handling asynchronicity in complex web applications is predictable and intuitive.
+
