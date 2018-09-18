@@ -207,6 +207,31 @@ combineNodes = (...args) => {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
+const virtualize = silo => {
+  const vSilo = {};
+
+  //virtual silo issues:
+  //what does this function return? It must just be a hash table of every node.
+  //since its upward facing I cant just return the head node.
+
+
+
+
+
+  /*recursively search through the silo{
+    I have parent object
+    create new object with parent and modifiers
+    add to object all the metadata: methods
+    the child is either a 
+    base case find a primitive{
+      return primitive as an object
+    }
+    
+  }
+  */
+}
+
+
 silo.prototype.subscribe = (component, name) => {
     if(!name && !component.prototype){
         throw Error('you cant use an anonymous function in subscribe without a name argument');
