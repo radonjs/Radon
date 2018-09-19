@@ -246,7 +246,9 @@ silo.subscribe = (component, name) => {
         foundNode._subscribers.push(component)
         if(typeof foundNode.value === 'object'){
           for(let i in foundNode.value){
-            foundNode.value[i]._subscribers.push(component);
+            if(i.slice(-5) !== 'State'){
+              foundNode.value[i]._subscribers.push(component);
+            }
           }
         }
       }
