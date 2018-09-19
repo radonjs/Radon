@@ -79,7 +79,10 @@ class SiloNode {
   
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
-          if (this.type !== 'PRIMITIVE') this.updateSilo();
+          if (this.type !== 'PRIMITIVE') {
+            this.value = this.updateSilo();
+            this.runLinkModifiers(this.name);
+          }
           this.notifySubscribers();
         }
 
@@ -108,14 +111,14 @@ class SiloNode {
     
     if (Array.isArray(obj.value) && obj.value.length > 0) {
       obj.value.forEach((val, i) => {
-        if (typeof val === 'object') objChildren[`${objName}_${i}`] = updateSilo(`${objName}_${i}`, {value: val}, node);
+        if (typeof val === 'object') objChildren[`${objName}_${i}`] = this.updateSilo(`${objName}_${i}`, {value: val}, node);
         else objChildren[`${objName}_${i}`] = new SiloNode(val, node);
       })
     } 
     
     else if (keys.length > 0) {
       keys.forEach(key => {
-        if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = updateSilo(key, {value: obj.value[key]}, node);
+        if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = this.updateSilo(key, {value: obj.value[key]}, node);
         else objChildren[`${objName}_${key}`] = new SiloNode(obj.value[key], node);
       })
     }
@@ -123,7 +126,8 @@ class SiloNode {
     // method below created to ensure that all values have been added to the objChild before
     // modifiers are linked (needed for objects)
     node.runLinkModifiers(objName);
-    this.value = objChildren;
+    node.value = objChildren;
+    return node;
   }
 
   runLinkModifiers(nodeName) {
@@ -132,9 +136,8 @@ class SiloNode {
   }
 
   linkModifiers(nodeName, stateModifiers) {
-    if (!stateModifiers) return;
+    if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
-
     // looping through every modifier added by the dev
     Object.keys(stateModifiers).forEach(modifierKey => {
       const modifier = stateModifiers[modifierKey];
@@ -209,7 +212,7 @@ class SiloNode {
       if (childObj.type === 'ARRAY') {
         newArray.push(this.handleArray(`${name}_${i}`, childObj));
       } else if (childObj.type === 'OBJECT') {
-        newArray.push(this.handleObject(`${name}_${i}`, obj))
+        newArray.push(this.handleObject(`${name}_${i}`, childObj))
       } else if (childObj.type === 'PRIMITIVE') {
         newArray.push(childObj.value);
       }
@@ -244,6 +247,6 @@ class SiloNode {
   }
 }
 
-export default SiloNode;
+// export default SiloNode;
 
-// module.exports = SiloNode;
+module.exports = SiloNode;

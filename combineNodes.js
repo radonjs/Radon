@@ -1,38 +1,38 @@
 // import state class for instanceof check
-// const StateNode = require('./stateNode.js');
-// const SiloNode = require('./SiloNode.js');
+const StateNode = require('./stateNode.js');
+const SiloNode = require('./SiloNode.js');
 
 // import state class for instanceof check
-import StateNode from './stateNode.js';
-import SiloNode from './siloNode.js';
+// import StateNode from './stateNode.js';
+// import SiloNode from './siloNode.js';
 
 // ==================> SILO TESTING <=================== \\
 
-const AppState = new StateNode('AppState');
-// AppState.name = 'AppState'; -> optional if not set in constructor
+// const AppState = new StateNode('AppState');
+// // AppState.name = 'AppState'; -> optional if not set in constructor
 
-AppState.initializeState({
-  name: 'Han',
-  age: 25,
-  cart: [1,2,3]
-})
+// AppState.initializeState({
+//   name: 'Han',
+//   age: 25,
+//   cart: [{one: 1}]
+// })
 
-AppState.initializeModifiers({
-  age: {
-    incrementAge: (current, payload) => {
-      return current + payload;
-    }
-  },
-  cart: {
-    increment: (current, index, payload) => {
-      return ++current;
-    },
-    addItem: (current, payload) => {
-      current.push(payload);
-      return current;
-    }
-  }
-});
+// AppState.initializeModifiers({
+//   age: {
+//     incrementAge: (current, payload) => {
+//       return current + payload;
+//     }
+//   },
+//   cart: {
+//     increment: (current, index, payload) => {
+//       return ++current;
+//     },
+//     addItem: (current, payload) => {
+//       current.push(payload);
+//       return current;
+//     }
+//   }
+// });
 
 // const NavState = new StateNode('NavState');
 // NavState.parent = 'AppState';
@@ -205,6 +205,11 @@ function combineNodes(...args) {
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
+// combineNodes(AppState); // testing purposes
+// console.log("beginning case", silo.AppState.value.cart);
+// silo.AppState.value.cart.modifiers.addItem({two: 2});
+
+// setTimeout(() => console.log("end case", silo.AppState.value.cart), 1000);
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
@@ -272,5 +277,5 @@ silo.subscribe = (component, name) => {
     //add to its subscribers the component;
 }
 
-export default combineNodes;
-// module.exports = combineNodes;
+// export default combineNodes;
+module.exports = combineNodes;
