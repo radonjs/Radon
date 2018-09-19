@@ -224,7 +224,6 @@ silo.subscribe = (component, name) => {
   }
   
   const searchSilo = (head, name) => {
-    
       let children;
       if(typeof head.value !== 'object') return null;
       else children = head.value;
