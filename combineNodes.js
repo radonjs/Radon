@@ -252,6 +252,7 @@ silo.subscribe = (component, name) => {
       }
     }
   }
+  
 
   component(foundNode.getState());
   return foundNode;
