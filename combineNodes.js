@@ -210,33 +210,42 @@ function combineNodes(...args) {
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
 silo.subscribe = (component, name) => {
-    if(!name && !component.prototype){
-        throw Error('you cant use an anonymous function in subscribe without a name argument');
-    } else if (!name && !!component.prototype){
-        name = component.prototype.constructor.name + 'State'
-    }
+  if(!name && !component.prototype){
+      throw Error('you cant use an anonymous function in subscribe without a name argument');
+  } else if (!name && !!component.prototype){
+      name = component.prototype.constructor.name + 'State'
+  }
+  
+  const searchSilo = (head, name) => {
     
-    const searchSilo = (head, name) => {
-      console.log("HEAD", head);
-        
-        let children;
-        if(typeof head.value !== 'object') return null;
-        else children = head.value;
+      
+      let children;
+      if(typeof head.value !== 'object') return null;
+      else children = head.value;
 
-        for(let i in children){
-            if(i === name){
-                return children[i]
-            } else {
-                let foundNode = searchSilo(children[i], name);
-                if(!!foundNode){return foundNode};
-            }
-        }
+      for(let i in children){
+          if(i === name){
+              return children[i]
+          } else {
+              let foundNode = searchSilo(children[i], name);
+              if(!!foundNode){return foundNode};
+          }
+      }
+  }
+
+  let foundNode;
+  for(let i in this){
+    if(this[i] instanceof SiloNode){
+      console.log(i);
+      foundNode = searchSilo(this[i], name)
+      if(!!foundNode){
+        foundNode._subscribers.push(component)
+      }
     }
+  }
 
-    let foundNode = searchSilo(silo, name);
-    foundNode._subscribers.push(component)
-    return foundNode;
-    
+  return foundNode;
+
     //if there's no name assume the name is component name + 'State'
     //recursively search through silo from headnode
     //find something with name === name;
