@@ -8,31 +8,31 @@ const SiloNode = require('./SiloNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
-const AppState = new StateNode('AppState');
-// AppState.name = 'AppState'; -> optional if not set in constructor
+// const AppState = new StateNode('AppState');
+// // AppState.name = 'AppState'; -> optional if not set in constructor
 
-AppState.initializeState({
-  name: 'Han',
-  age: 25,
-  cart: [{one: 1}]
-})
+// AppState.initializeState({
+//   name: 'Han',
+//   age: 25,
+//   cart: [{one: 1}]
+// })
 
-AppState.initializeModifiers({
-  age: {
-    incrementAge: (current, payload) => {
-      return current + payload;
-    }
-  },
-  cart: {
-    increment: (current, index, payload) => {
-      return ++current;
-    },
-    addItem: (current, payload) => {
-      current.push(payload);
-      return current;
-    }
-  }
-});
+// AppState.initializeModifiers({
+//   age: {
+//     incrementAge: (current, payload) => {
+//       return current + payload;
+//     }
+//   },
+//   cart: {
+//     increment: (current, index, payload) => {
+//       return ++current;
+//     },
+//     addItem: (current, payload) => {
+//       current.push(payload);
+//       return current;
+//     }
+//   }
+// });
 
 // const NavState = new StateNode('NavState');
 // NavState.parent = 'AppState';
