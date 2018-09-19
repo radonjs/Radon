@@ -1,33 +1,38 @@
 // import state class for instanceof check
-const StateNode = require('./stateNode.js');
-const SiloNode = require('./siloNode.js');
+// const StateNode = require('./stateNode.js');
+// const SiloNode = require('./SiloNode.js');
+
+// import state class for instanceof check
+import StateNode from './stateNode.js';
+import SiloNode from './siloNode.js';
 
 // ==================> SILO TESTING <=================== \\
 
-// const AppState = new StateNode('AppState');
-// // AppState.name = 'AppState'; -> optional if not set in constructor
+const AppState = new StateNode('AppState');
+// AppState.name = 'AppState'; -> optional if not set in constructor
 
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25,
-//   cart: {one:[1,2,3], two:2}
-// })
+AppState.initializeState({
+  name: 'Han',
+  age: 25,
+  cart: [1,2,3]
+})
 
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   },
-//   cart: {
-//     increment: (current, index, payload) => {
-//       return ++current;
-//     },
-//     addItem: (current, payload) => {
-//       return current.push(payload);
-//     }
-//   }
-// });
+AppState.initializeModifiers({
+  age: {
+    incrementAge: (current, payload) => {
+      return current + payload;
+    }
+  },
+  cart: {
+    increment: (current, index, payload) => {
+      return ++current;
+    },
+    addItem: (current, payload) => {
+      current.push(payload);
+      return current;
+    }
+  }
+});
 
 // const NavState = new StateNode('NavState');
 // NavState.parent = 'AppState';
@@ -111,6 +116,9 @@ function handleNestedObject(objName, obj, parent) {
     })
   }
 
+  // method below created to ensure that all values have been added to the objChild before
+  // modifiers are linked (needed for objects)
+  node.runLinkModifiers(objName);
   return node;
 }
 
@@ -125,7 +133,8 @@ function combineNodes(...args) {
   const hashTable = {};
   args.forEach(node => {
     // all nodes must be an instance of state node (must import state class)
-    if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
+    //console.log(node, node instanceof StateNode);
+    //if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
 
     if (node.parent === null) {
       // only one node can be the root
@@ -196,8 +205,6 @@ function combineNodes(...args) {
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
-// console.log(silo.AppState.value.NavState.value.ButtState.getState());
-// silo.AppState.value.NavState.value.ButtState.getState();
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
@@ -210,37 +217,61 @@ function combineNodes(...args) {
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
 silo.subscribe = (component, name) => {
-    if(!name && !component.prototype){
-        throw Error('you cant use an anonymous function in subscribe without a name argument');
-    } else if (!name && !!component.prototype){
-        name = component.prototype.constructor.name + 'State'
-    }
+  if(!name && !component.prototype){
+      throw Error('you cant use an anonymous function in subscribe without a name argument');
+  } else if (!name && !!component.prototype){
+      name = component.prototype.constructor.name + 'State'
+  }
+  
+  const searchSilo = (head, name) => {
     
-    const searchSilo = (head, name) => {
-      console.log("HEAD", head);
-        
-        let children;
-        if(typeof head.value !== 'object') return null;
-        else children = head.value;
+      let children;
+      if(typeof head.value !== 'object') return null;
+      else children = head.value;
 
-        for(let i in children){
-            if(i === name){
-                return children[i]
-            } else {
-                let foundNode = searchSilo(children[i], name);
-                if(!!foundNode){return foundNode};
+      for(let i in children){
+          if(i === name){
+              return children[i]
+          } else {
+              let foundNode = searchSilo(children[i], name);
+              if(!!foundNode){return foundNode};
+          }
+      }
+  }
+
+  console.log('Searching for', name);
+  let foundNode;
+  for(let i in silo){
+    if(silo[i].constructor === SiloNode){
+      if(i === name) {
+        foundNode = silo[i];
+      } else {
+        foundNode = searchSilo(silo[i], name)
+      }
+      if(!!foundNode){
+        foundNode._subscribers.push(component)
+        if(typeof foundNode.value === 'object'){
+          for(let i in foundNode.value){
+            if(i.slice(-5) !== 'State'){
+              foundNode.value[i]._subscribers.push(component);
             }
+          }
         }
+      }
     }
+  }
+  
+  if(foundNode) {
+    component(foundNode.getState());    
+  }
 
-    let foundNode = searchSilo(silo, name);
-    foundNode._subscribers.push(component)
-    return foundNode;
-    
+  return foundNode;
+
     //if there's no name assume the name is component name + 'State'
     //recursively search through silo from headnode
     //find something with name === name;
     //add to its subscribers the component;
 }
 
-module.exports = combineNodes;
+export default combineNodes;
+// module.exports = combineNodes;
