@@ -1,6 +1,6 @@
 // import state class for instanceof check
 const StateNode = require('./stateNode.js');
-const SiloNode = require('./SiloNode.js');
+const SiloNode = require('./siloNode.js');
 
 // ==================> SILO TESTING <=================== \\
 
@@ -41,7 +41,7 @@ const SiloNode = require('./SiloNode.js');
 
 // ButtState.initializeState({
 //   butt: 'Butt'
-})
+// })
 
 //==================> SILO TESTING ENDED <===================\\
 
@@ -97,7 +97,7 @@ function handleNestedObject(objName, obj, parent) {
 
   const node = new SiloNode(objChildren, parent, obj.modifiers, type);
   
-  if (Array.isArray(obj.value) && keys.length > 0) {
+  if (Array.isArray(obj.value) && obj.value.length > 0) {
     obj.value.forEach((val, i) => {
       if (typeof val === 'object') objChildren[`${objName}_${i}`] = handleNestedObject(`${objName}_${i}`, {value: val}, node);
       else objChildren[`${objName}_${i}`] = new SiloNode(val, node);
@@ -117,7 +117,7 @@ function handleNestedObject(objName, obj, parent) {
 // combineNodes takes all of the StateNodes created by the developer. It then creates SiloNodes from the
 // StateNodes and organizes them into a single nested object, the silo
 
-combineNodes = (...args) => {
+function combineNodes(...args) {
   // you called this function without passing stuff? Weird
   if (args.length === 0) return;
 
@@ -191,6 +191,8 @@ combineNodes = (...args) => {
   Object.keys(temp).forEach(key => {
     silo[key] = temp[key];
   });
+
+  return silo;
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
@@ -207,7 +209,7 @@ combineNodes = (...args) => {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
-silo.prototype.subscribe = (component, name) => {
+silo.subscribe = (component, name) => {
     if(!name && !component.prototype){
         throw Error('you cant use an anonymous function in subscribe without a name argument');
     } else if (!name && !!component.prototype){
@@ -215,6 +217,7 @@ silo.prototype.subscribe = (component, name) => {
     }
     
     const searchSilo = (head, name) => {
+      console.log("HEAD", head);
         
         let children;
         if(typeof head.value !== 'object') return null;
@@ -230,8 +233,8 @@ silo.prototype.subscribe = (component, name) => {
         }
     }
 
-    let foundNode = searchSilo(this, name);
-    foundNode.subscribers.push(component)
+    let foundNode = searchSilo(silo, name);
+    foundNode._subscribers.push(component)
     return foundNode;
     
     //if there's no name assume the name is component name + 'State'
@@ -240,7 +243,4 @@ silo.prototype.subscribe = (component, name) => {
     //add to its subscribers the component;
 }
 
-module.exports = {
-  silo,
-  combineNodes
-}
+module.exports = combineNodes;
