@@ -100,6 +100,10 @@ function handleNestedObject(objName, obj, parent) {
     type = 'OBJECT'
   }
 
+  
+
+
+
   const node = new SiloNode(objChildren, parent, obj.modifiers, type);
   
   if (Array.isArray(obj.value) && obj.value.length > 0) {
@@ -109,12 +113,15 @@ function handleNestedObject(objName, obj, parent) {
     })
   } 
   
+
   else if (keys.length > 0) {
     keys.forEach(key => {
       if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = handleNestedObject(key, {value: obj.value[key]}, node);
       else objChildren[`${objName}_${key}`] = new SiloNode(obj.value[key], node);
     })
   }
+
+  
 
   // method below created to ensure that all values have been added to the objChild before
   // modifiers are linked (needed for objects)
@@ -199,6 +206,82 @@ function combineNodes(...args) {
   // will always only be a single key (the root) that is added into the silo
   Object.keys(temp).forEach(key => {
     silo[key] = temp[key];
+  });
+
+  silo.subscribe = (component, name) => {
+    if(!name && !component.prototype){
+        throw Error('you cant use an anonymous function in subscribe without a name argument');
+    } else if (!name && !!component.prototype){
+        name = component.prototype.constructor.name + 'State'
+    }
+    
+    const searchSilo = (head, name) => {
+        let children;
+        if(typeof head.value !== 'object') return null;
+        else children = head.value;
+  
+        for(let i in children){
+            if(i === name){
+                return children[i]
+            } else {
+                let foundNode = searchSilo(children[i], name);
+                if(!!foundNode){return foundNode};
+            }
+        }
+    }
+  
+    console.log('Searching for', name);
+    let foundNode;
+    for(let i in silo){
+      if(silo[i].constructor === SiloNode){
+        if(i === name) {
+          foundNode = silo[i];
+        } else {
+          foundNode = searchSilo(silo[i], name)
+        }
+        if(!!foundNode){
+          foundNode._subscribers.push(component)
+          if(typeof foundNode.value === 'object'){
+            for(let i in foundNode.value){
+              if(i.slice(-5) !== 'State'){
+                foundNode.value[i]._subscribers.push(component);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+  }
+
+  function applyToSilo(callback){
+
+    for(let i in silo){
+      inner(silo[i], callback)
+    }
+  
+    function inner(head, callback){
+      callback(head);
+  
+      if(typeof head.value !== 'object'){ return } //base case
+  
+      else {
+        for(let i in head.value){
+          inner(head.value[i], callback)
+        }
+      }
+    }
+  }
+  
+  applyToSilo(node => {
+    if(typeof node.value === 'object'){
+      
+
+      node.keySubscribe = (key, callback) => {
+        const name = node.name + "_" + key;
+        node.value[name]._subscribers.push(callback);
+      }
+    }
   });
 
   return silo;
