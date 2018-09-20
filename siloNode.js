@@ -81,7 +81,6 @@ class SiloNode {
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
           if (this.type !== 'PRIMITIVE') this.value = this.updateSilo().value;
-          // undefined_location undefined_id
           this.notifySubscribers();
         }
 
@@ -126,7 +125,7 @@ class SiloNode {
     return node;
   }
 
-  runLinkModifiers(nodeName) {
+  runLinkModifiers(nodeName = this.name) {
     // this.name = nodeName;
     this.linkModifiers(nodeName, this.modifiers);
   }

@@ -120,7 +120,7 @@ function handleNestedObject(objName, obj, parent) {
 
   // method below created to ensure that all values have been added to the objChild before
   // modifiers are linked (needed for objects)
-  node.runLinkModifiers(objName); // this one is fine
+  node.runLinkModifiers(objName);
   return node;
 }
 
@@ -181,7 +181,10 @@ function combineNodes(...args) {
           nodeVal[varName] = handleNestedObject(varName, stateObj[varName], thisSiloNode);
         }
         // primitives only
-        else nodeVal[varName] = new SiloNode(varName, stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+        else {
+          nodeVal[varName] = new SiloNode(varName, stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+          runLinkModifiers(varName);
+        }
       })
 
       // recurse for grandbabiessss
