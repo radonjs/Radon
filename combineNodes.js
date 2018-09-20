@@ -1,10 +1,10 @@
 // import state class for instanceof check
-const StateNode = require('./stateNode.js');
-const SiloNode = require('./SiloNode.js');
+// const StateNode = require('./stateNode.js');
+// const SiloNode = require('./siloNode.js');
 
 // import state class for instanceof check
-// import StateNode from './stateNode.js';
-// import SiloNode from './siloNode.js';
+import StateNode from './stateNode.js';
+import SiloNode from './siloNode.js';
 
 // ==================> SILO TESTING <=================== \\
 
@@ -13,8 +13,7 @@ const SiloNode = require('./SiloNode.js');
 
 // AppState.initializeState({
 //   name: 'Han',
-//   age: 25,
-//   cart: [{one: 1}]
+//   age: 25
 // })
 
 // AppState.initializeModifiers({
@@ -22,7 +21,17 @@ const SiloNode = require('./SiloNode.js');
 //     incrementAge: (current, payload) => {
 //       return current + payload;
 //     }
-//   },
+//   }
+// });
+
+// const NavState = new StateNode('NavState');
+// NavState.parent = 'AppState';
+
+// NavState.initializeState({
+//   cart: []
+// })
+
+// NavState.initializeModifiers({
 //   cart: {
 //     increment: (current, index, payload) => {
 //       return ++current;
@@ -33,13 +42,6 @@ const SiloNode = require('./SiloNode.js');
 //     }
 //   }
 // });
-
-// const NavState = new StateNode('NavState');
-// NavState.parent = 'AppState';
-
-// NavState.initializeState({
-//   nav: 'Nav'
-// })
 
 // const ButtState = new StateNode('ButtState');
 // ButtState.parent = 'NavState';
@@ -100,19 +102,19 @@ function handleNestedObject(objName, obj, parent) {
     type = 'OBJECT'
   }
 
-  const node = new SiloNode(objChildren, parent, obj.modifiers, type);
+  const node = new SiloNode(objName, objChildren, parent, obj.modifiers, type);
   
   if (Array.isArray(obj.value) && obj.value.length > 0) {
     obj.value.forEach((val, i) => {
       if (typeof val === 'object') objChildren[`${objName}_${i}`] = handleNestedObject(`${objName}_${i}`, {value: val}, node);
-      else objChildren[`${objName}_${i}`] = new SiloNode(val, node);
+      else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, val, node);
     })
   } 
   
   else if (keys.length > 0) {
     keys.forEach(key => {
       if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = handleNestedObject(key, {value: obj.value[key]}, node);
-      else objChildren[`${objName}_${key}`] = new SiloNode(obj.value[key], node);
+      else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, obj.value[key], node);
     })
   }
 
@@ -167,7 +169,7 @@ function combineNodes(...args) {
     hashTable[nodeName].forEach(child => {
 
       const nodeVal = {};
-      allChildren[child.name] = new SiloNode(nodeVal, parent, {}, 'NESTEDSTATE');
+      allChildren[child.name] = new SiloNode(child.name, nodeVal, parent, {}, 'NESTEDSTATE');
       const thisStateNode = child;
       const thisSiloNode = allChildren[child.name];
       const stateObj = child.state;
@@ -179,7 +181,10 @@ function combineNodes(...args) {
           nodeVal[varName] = handleNestedObject(varName, stateObj[varName], thisSiloNode);
         }
         // primitives only
-        else nodeVal[varName] = new SiloNode(stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+        else {
+          nodeVal[varName] = new SiloNode(varName, stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
+          runLinkModifiers(varName);
+        }
       })
 
       // recurse for grandbabiessss
@@ -205,11 +210,21 @@ function combineNodes(...args) {
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
-// combineNodes(AppState); // testing purposes
+// combineNodes(AppState, NavState); // testing purposes
 // console.log("beginning case", silo.AppState.value.cart);
 // silo.AppState.value.cart.modifiers.addItem({two: 2});
+// silo.AppState.value.cart.modifiers.addItem({three: 3});
 
 // setTimeout(() => console.log("end case", silo.AppState.value.cart), 1000);
+
+// console.log(silo.AppState.getState());
+// silo.AppState.value.NavState.value.cart.subscribers.push((state) => {console.log('STATE', state)});
+// silo.AppState.value.NavState.value.cart.modifiers.addItem({two: 2});
+
+// silo.AppState.value.cart.modifiers.addItem({two: 3, five: 5});
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
+// setTimeout(() => {console.log('Im adding', silo.AppState.value.NavState.getState().addItem({five: 5}))}, 1001);
+// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
@@ -277,5 +292,5 @@ silo.subscribe = (component, name) => {
     //add to its subscribers the component;
 }
 
-// export default combineNodes;
-module.exports = combineNodes;
+export default combineNodes;
+// module.exports = combineNodes;
