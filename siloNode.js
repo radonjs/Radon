@@ -1,6 +1,6 @@
 class SiloNode {
-  constructor(val, parent = null, modifiers = {}, type = 'PRIMITIVE') {
-    this._name;
+  constructor(name, val, parent = null, modifiers = {}, type = 'PRIMITIVE') {
+    this._name = name;
     this._value = val;
     this._modifiers = modifiers;
     this._queue = [];
@@ -17,6 +17,7 @@ class SiloNode {
     this.handleArray = this.handleArray.bind(this);
     this.handleObject = this.handleObject.bind(this);
     this.updateSilo = this.updateSilo.bind(this);
+    this.handle = this.handle.bind(this);
 
     // invoke functions
     this.runQueue = this.runModifiers();
@@ -80,6 +81,7 @@ class SiloNode {
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
           if (this.type !== 'PRIMITIVE') this.value = this.updateSilo().value;
+          // undefined_location undefined_id
           this.notifySubscribers();
         }
 
@@ -104,19 +106,19 @@ class SiloNode {
       type = 'OBJECT'
     }
   
-    const node = new SiloNode(objChildren, parent, obj.modifiers, type);
+    const node = new SiloNode(objName, objChildren, parent, obj.modifiers, type);
     
     if (Array.isArray(obj.value) && obj.value.length > 0) {
       obj.value.forEach((val, i) => {
         if (typeof val === 'object') objChildren[`${objName}_${i}`] = this.updateSilo(`${objName}_${i}`, {value: val}, node);
-        else objChildren[`${objName}_${i}`] = new SiloNode(val, node);
+        else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, val, node);
       })
     } 
     
     else if (keys.length > 0) {
       keys.forEach(key => {
         if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = this.updateSilo(key, {value: obj.value[key]}, node);
-        else objChildren[`${objName}_${key}`] = new SiloNode(obj.value[key], node);
+        else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, obj.value[key], node);
       })
     }
 
@@ -125,7 +127,7 @@ class SiloNode {
   }
 
   runLinkModifiers(nodeName) {
-    this.name = nodeName;
+    // this.name = nodeName;
     this.linkModifiers(nodeName, this.modifiers);
   }
 
@@ -165,17 +167,25 @@ class SiloNode {
       // adds middleware that will affect the value of a child node of index
       else if (modifier.length > 2) {
         // wrap the dev's modifier function so we can pass the current node value into it
-        const linkedModifier = async (index, payload) => await modifier(that.value[index].value, index, payload); 
+        const linkedModifier = async (index, payload) => await modifier(this.handle(that.value[index], index), index, payload); 
 
         // the function that will be called when the dev tries to call their modifier
         stateModifiers[modifierKey] = (index, payload) => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
-          const callback = async () => await linkedModifier(index, payload);
-          that.value[index].queue.push(callback);
-          that.value[index].runQueue();
+          const callback = async () => await linkedModifier(`${this.name}_${index}`, payload);
+          that.value[`${this.name}_${index}`].queue.push(callback);
+          that.value[`${this.name}_${index}`].runQueue();
         }
       }
     })
+  }
+
+  handle(node, name) {
+    let handledObj;
+    if (node.type === 'OBJECT') handledObj = this.handleObject(name, node);
+    else if (node.type === 'ARRAY') handledObj = this.handleArray(name, node);
+    else return node.value;
+    return handledObj;
   }
 
   handleObject(name, obj) {
@@ -244,6 +254,6 @@ class SiloNode {
   }
 }
 
-// export default SiloNode;
+export default SiloNode;
 
-module.exports = SiloNode;
+// module.exports = SiloNode;
