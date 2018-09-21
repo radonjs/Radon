@@ -1,10 +1,10 @@
 // import state class for instanceof check
-// const StateNode = require('./stateNode.js');
-// const SiloNode = require('./siloNode.js');
+const StateNode = require('./stateNode.js');
+const SiloNode = require('./siloNode.js');
 
 // import state class for instanceof check
-import StateNode from './stateNode.js';
-import SiloNode from './siloNode.js';
+// import StateNode from './stateNode.js';
+// import SiloNode from './siloNode.js';
 
 // ==================> SILO TESTING <=================== \\
 
@@ -28,12 +28,13 @@ import SiloNode from './siloNode.js';
 // NavState.parent = 'AppState';
 
 // NavState.initializeState({
+//   name: 'Han',
 //   cart: []
 // })
 
 // NavState.initializeModifiers({
 //   cart: {
-//     increment: (current, index, payload) => {
+//     updateCartItem: (current, index, payload) => {
 //       return ++current;
 //     },
 //     addItem: (current, payload) => {
@@ -120,7 +121,7 @@ function handleNestedObject(objName, obj, parent) {
 
   // method below created to ensure that all values have been added to the objChild before
   // modifiers are linked (needed for objects)
-  node.runLinkModifiers(objName);
+  node.linkModifiers();
   return node;
 }
 
@@ -183,7 +184,7 @@ function combineNodes(...args) {
         // primitives only
         else {
           nodeVal[varName] = new SiloNode(varName, stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
-          runLinkModifiers(varName);
+          nodeVal[varName].linkModifiers();
         }
       })
 
@@ -211,19 +212,13 @@ function combineNodes(...args) {
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
 // combineNodes(AppState, NavState); // testing purposes
-// console.log("beginning case", silo.AppState.value.cart);
-// silo.AppState.value.cart.modifiers.addItem({two: 2});
-// silo.AppState.value.cart.modifiers.addItem({three: 3});
 
-// setTimeout(() => console.log("end case", silo.AppState.value.cart), 1000);
-
-// console.log(silo.AppState.getState());
-// silo.AppState.value.NavState.value.cart.subscribers.push((state) => {console.log('STATE', state)});
-// silo.AppState.value.NavState.value.cart.modifiers.addItem({two: 2});
-
-// silo.AppState.value.cart.modifiers.addItem({two: 3, five: 5});
 // setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
 // setTimeout(() => {console.log('Im adding', silo.AppState.value.NavState.getState().addItem({five: 5}))}, 1001);
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1005);
+// setTimeout(() => {console.log('Im adding', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1010);
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1012);
+
 // setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
@@ -292,5 +287,5 @@ silo.subscribe = (component, name) => {
     //add to its subscribers the component;
 }
 
-export default combineNodes;
-// module.exports = combineNodes;
+// export default combineNodes;
+module.exports = combineNodes;

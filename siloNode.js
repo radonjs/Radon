@@ -2,7 +2,8 @@ class SiloNode {
   constructor(name, val, parent = null, modifiers = {}, type = 'PRIMITIVE') {
     this._name = name;
     this._value = val;
-    this._modifiers = modifiers;
+    this._origModifiers = modifiers;
+    this._modifiers = {};
     this._queue = [];
     this._subscribers = [];
     this._parent = parent; // circular silo node
@@ -13,7 +14,6 @@ class SiloNode {
     this.runModifiers = this.runModifiers.bind(this);
     this.notifySubscribers = this.notifySubscribers.bind(this);
     this.getState = this.getState.bind(this);
-    this.runLinkModifiers = this.runLinkModifiers.bind(this);
     this.handleArray = this.handleArray.bind(this);
     this.handleObject = this.handleObject.bind(this);
     this.updateSilo = this.updateSilo.bind(this);
@@ -51,9 +51,9 @@ class SiloNode {
     return this._parent;
   }
 
-  // set subscribers() {
-  //   return this._subscribers;
-  // }
+  get origModifiers() {
+    return this._origModifiers;
+  }
 
   get subscribers() {
     return this._subscribers;
@@ -80,7 +80,10 @@ class SiloNode {
   
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
-          if (this.type !== 'PRIMITIVE') this.value = this.updateSilo().value;
+          if (this.type !== 'PRIMITIVE') {
+            this.value = this.updateSilo().value;
+            this.linkModifiers(this.name, this.origModifiers);
+          }
           this.notifySubscribers();
         }
 
@@ -125,12 +128,7 @@ class SiloNode {
     return node;
   }
 
-  runLinkModifiers(nodeName = this.name) {
-    // this.name = nodeName;
-    this.linkModifiers(nodeName, this.modifiers);
-  }
-
-  linkModifiers(nodeName, stateModifiers) {
+  linkModifiers(nodeName = this.name, stateModifiers = this.origModifiers) {
     if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
     // looping through every modifier added by the dev
@@ -155,7 +153,7 @@ class SiloNode {
         }
 
         // the function that will be called when the dev tries to call their modifier
-        stateModifiers[modifierKey] = payload => {
+        this.modifiers[modifierKey] = payload => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(payload);
           that.queue.push(callback);
@@ -169,7 +167,7 @@ class SiloNode {
         const linkedModifier = async (index, payload) => await modifier(this.handle(that.value[index], index), index, payload); 
 
         // the function that will be called when the dev tries to call their modifier
-        stateModifiers[modifierKey] = (index, payload) => {
+        this.modifiers[modifierKey] = (index, payload) => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(`${this.name}_${index}`, payload);
           that.value[`${this.name}_${index}`].queue.push(callback);
