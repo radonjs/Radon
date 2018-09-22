@@ -13,7 +13,6 @@ class SiloNode {
     this.runModifiers = this.runModifiers.bind(this);
     this.notifySubscribers = this.notifySubscribers.bind(this);
     this.getState = this.getState.bind(this);
-    this.runLinkModifiers = this.runLinkModifiers.bind(this);
     this.handleArray = this.handleArray.bind(this);
     this.handleObject = this.handleObject.bind(this);
     this.updateSilo = this.updateSilo.bind(this);
@@ -51,10 +50,6 @@ class SiloNode {
     return this._parent;
   }
 
-  // set subscribers() {
-  //   return this._subscribers;
-  // }
-
   get subscribers() {
     return this._subscribers;
   }
@@ -77,13 +72,11 @@ class SiloNode {
     async function run() {
       if (running === false) { // prevents multiple calls from being made if already running
         running = true;
-  
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
           if (this.type !== 'PRIMITIVE') this.value = this.updateSilo().value;
           this.notifySubscribers();
         }
-
         running = false;   
       } else {
         return 'in progress...';
@@ -125,12 +118,7 @@ class SiloNode {
     return node;
   }
 
-  runLinkModifiers(nodeName = this.name) {
-    // this.name = nodeName;
-    this.linkModifiers(nodeName, this.modifiers);
-  }
-
-  linkModifiers(nodeName, stateModifiers) {
+  linkModifiers(nodeName = this.name, stateModifiers = this.modifiers) {
     if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
     // looping through every modifier added by the dev
@@ -143,19 +131,17 @@ class SiloNode {
       else if (modifier.length <= 2) {
         // wrap the dev's modifier function so we can pass the current node value into it
         let linkedModifier;
-        if (that.type === 'PRIMITIVE') linkedModifier = async (payload) => await modifier(that.value, payload); 
+        if (that.type === 'PRIMITIVE') linkedModifier = async (payload) => await modifier(that.value, payload);
         // that.value is an object and we need to reassemble it
         else if (that.type === 'OBJECT') {
-          const value = this.handleObject(nodeName, that);
-          linkedModifier = async (payload) => await modifier(value, payload);
+          linkedModifier = async (payload) => await modifier(this.handleObject(nodeName, that), payload);
         }
         else if (that.type === 'ARRAY') {
-          const value = this.handleArray(nodeName, that);
-          linkedModifier = async (payload) => await modifier(value, payload);
+          linkedModifier = async (payload) => await modifier(this.handleArray(nodeName, that), payload);
         }
 
         // the function that will be called when the dev tries to call their modifier
-        stateModifiers[modifierKey] = payload => {
+        this.modifiers[modifierKey] = payload => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(payload);
           that.queue.push(callback);
@@ -169,7 +155,7 @@ class SiloNode {
         const linkedModifier = async (index, payload) => await modifier(this.handle(that.value[index], index), index, payload); 
 
         // the function that will be called when the dev tries to call their modifier
-        stateModifiers[modifierKey] = (index, payload) => {
+        this.modifiers[modifierKey] = (index, payload) => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(`${this.name}_${index}`, payload);
           that.value[`${this.name}_${index}`].queue.push(callback);
@@ -254,5 +240,4 @@ class SiloNode {
 }
 
 export default SiloNode;
-
 // module.exports = SiloNode;
