@@ -206,8 +206,95 @@ function combineNodes(...args) {
   Object.keys(temp).forEach(key => {
     silo[key] = temp[key];
   });
+  
+  applyToSilo(node => {
+    if(node.type === 'OBJECT' || node.type === "ARRAY"){
+      node.modifiers.keySubscribe = (key, ComponentToBind) => {
+        const name = node.name + "_" + key;
+        return class Component extends React.Component {
+            constructor() {
+              super();
+
+              this.updateComponent = this.updateComponent.bind(this);
+            }
+
+            render() {
+              let newState = {};
+              if(this.updatedState) {
+                newState = this.updatedState;
+              }
+              return (<ComponentToBind {...this.props} {...newState} />);
+            }
+
+            updateComponent(updatedState) {
+                this.updatedState = updatedState;
+                this.forceUpdate();
+            }
+
+            componentWillMount () {
+              node.value[name]._subscribers.push(this.updateComponent);
+              node.value[name].notifySubscribers();
+            }
+        }
+      }
+      // node.modifiers.keySubscribe = (key, callback) => {
+      //   const name = node.name + "_" + key;
+      //   // return class Component extends React.Component {
+      //   //   constructor() {
+      //   //     super();
+
+      //   //     this.updateComponent = this.updateComponent.bind(this);
+      //   //   }
+
+      //   //   render() {
+      //   //     if(this.updatedState){
+      //   //         this.props = Object.assign(this.props.props, this.props, this.updatedState);
+      //   //     } else {
+      //   //         this.props = Object.assign({i: this.props.i}, this.props.props);
+      //   //     }
+      //   //     console.log('props', this.props)
+      //   //     return (callback);
+      //   //   }
+
+      //   //   componentDidMount () {
+      //   //     node.value[name]._subscribers.push(this.updateComponent);
+      //   //     console.log(node);
+      //   //     this.updateComponent();
+      //   //     //node.notifySubscribers();
+      //   //     console.log(this.props)
+      //   //     console.log('I DID MOUNT');
+      //   //   }
+
+      //   //   updateComponent(updatedState) {
+      //   //     console.log('COMPONENT RERENDER')
+      //   //     this.updatedState = updatedState;
+      //   //     this.forceUpdate();
+      //   //   }
+      //   // }
+      // }
+    }
+  });
 
   return silo;
+}
+
+function applyToSilo(callback){
+
+  for(let i in silo){
+    inner(silo[i], callback)
+  }
+
+  function inner(head, callback){
+    callback(head);
+
+    if(typeof head.value !== 'object'){ return } //base case
+
+    else {
+      for(let i in head.value){
+        inner(head.value[i], callback)
+      }
+    }
+  }
 }
 
 // combineNodes(ButtState, NavState, AppState); // testing purposes
@@ -253,8 +340,8 @@ silo.subscribe = (component, name) => {
       }
   }
 
-  console.log('Searching for', name);
   let foundNode;
+  let subscribedAtIndex;
   for(let i in silo){
     if(silo[i].constructor === SiloNode){
       if(i === name) {
@@ -267,7 +354,7 @@ silo.subscribe = (component, name) => {
         if(typeof foundNode.value === 'object'){
           for(let i in foundNode.value){
             if(i.slice(-5) !== 'State'){
-              foundNode.value[i]._subscribers.push(component);
+              subscribedAtIndex = foundNode.value[i]._subscribers.push(component);
             }
           }
         }
@@ -279,7 +366,11 @@ silo.subscribe = (component, name) => {
     component(foundNode.getState());    
   }
 
-  return foundNode;
+  function unsubscribe () {
+    foundNode._subscribers.splice(subscribedAtIndex, 1);
+  }
+
+  return unsubscribe;
 
     //if there's no name assume the name is component name + 'State'
     //recursively search through silo from headnode
