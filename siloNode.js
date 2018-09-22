@@ -51,10 +51,6 @@ class SiloNode {
     return this._parent;
   }
 
-  get origModifiers() {
-    return this._origModifiers;
-  }
-
   get subscribers() {
     return this._subscribers;
   }
@@ -77,7 +73,6 @@ class SiloNode {
     async function run() {
       if (running === false) { // prevents multiple calls from being made if already running
         running = true;
-  
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
           if (this.type !== 'PRIMITIVE') {
@@ -86,7 +81,6 @@ class SiloNode {
           }
           this.notifySubscribers();
         }
-
         running = false;   
       } else {
         return 'in progress...';
@@ -128,7 +122,7 @@ class SiloNode {
     return node;
   }
 
-  linkModifiers(nodeName = this.name, stateModifiers = this.origModifiers) {
+  linkModifiers(nodeName = this.name, stateModifiers = this.modifiers) {
     if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
     // looping through every modifier added by the dev
@@ -141,15 +135,13 @@ class SiloNode {
       else if (modifier.length <= 2) {
         // wrap the dev's modifier function so we can pass the current node value into it
         let linkedModifier;
-        if (that.type === 'PRIMITIVE') linkedModifier = async (payload) => await modifier(that.value, payload); 
+        if (that.type === 'PRIMITIVE') linkedModifier = async (payload) => await modifier(that.value, payload);
         // that.value is an object and we need to reassemble it
         else if (that.type === 'OBJECT') {
-          const value = this.handleObject(nodeName, that);
-          linkedModifier = async (payload) => await modifier(value, payload);
+          linkedModifier = async (payload) => await modifier(this.handleObject(nodeName, that), payload);
         }
         else if (that.type === 'ARRAY') {
-          const value = this.handleArray(nodeName, that);
-          linkedModifier = async (payload) => await modifier(value, payload);
+          linkedModifier = async (payload) => await modifier(this.handleArray(nodeName, that), payload);
         }
 
         // the function that will be called when the dev tries to call their modifier
@@ -252,5 +244,4 @@ class SiloNode {
 }
 
 export default SiloNode;
-
 // module.exports = SiloNode;
