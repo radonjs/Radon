@@ -198,6 +198,7 @@ class SiloNode {
     // loop through object values currently stored as nodes
     Object.keys(currSiloNode.value).forEach(key => {
       const childObj = currSiloNode.value[key];
+      
       //get keyName from the naming convention
       const extractedKey = key.slice(siloNodeName.length + 1);
       if (childObj.type === types.OBJECT || childObj.type === types.ARRAY) {
