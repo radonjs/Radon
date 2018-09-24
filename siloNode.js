@@ -132,7 +132,7 @@ class SiloNode {
     
     else if (keys.length > 0) {
       keys.forEach(key => {
-        if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = this.updateSilo(key, {value: obj.value[key]}, node);
+        if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = this.updateSilo(`${objName}_${key}`, {value: obj.value[key]}, node);
         else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, obj.value[key], node);
       })
     }

@@ -222,7 +222,7 @@ combineNodes(ButtState, NavState, AppState); // testing purposes
 // combineNodes(AppState, NavState); // testing purposes
 
 // setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
+setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
 setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
 
 
