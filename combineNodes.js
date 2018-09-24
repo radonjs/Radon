@@ -126,38 +126,37 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-  // DO NOT DELETE
   applyToSilo(node => {
-    // if (node.type === types.OBJECT || node.type === types.ARRAY) {
-    //   node.modifiers.keySubscribe = (key, ComponentToBind) => {
-    //     const name = node.name + "_" + key;
-    //     return class Component extends React.Component {
-    //         constructor() {
-    //           super();
+    if (node.type === types.OBJECT || node.type === types.ARRAY) {
+      node.modifiers.keySubscribe = (key, ComponentToBind) => {
+        const name = node.name + "_" + key;
+        return class Component extends React.Component {
+            constructor() {
+              super();
 
-    //           this.updateComponent = this.updateComponent.bind(this);
-    //         }
+              this.updateComponent = this.updateComponent.bind(this);
+            }
 
-    //         render() {
-    //           let newState = {};
-    //           if (this.updatedState) {
-    //             newState = this.updatedState;
-    //           }
-    //           return (<ComponentToBind {...this.props} {...newState} />);
-    //         }
+            render() {
+              let newState = {};
+              if (this.updatedState) {
+                newState = this.updatedState;
+              }
+              return (<ComponentToBind {...this.props} {...newState} />);
+            }
 
-    //         updateComponent(updatedState) {
-    //             this.updatedState = updatedState;
-    //             this.forceUpdate();
-    //         }
+            updateComponent(updatedState) {
+                this.updatedState = updatedState;
+                this.forceUpdate();
+            }
 
-    //         componentWillMount () {
-    //           node.value[name].subscribers.push(this.updateComponent);
-    //           node.value[name].notifySubscribers();
-    //         }
-    //     }
-    //   }
-    // }
+            componentWillMount () {
+              node.value[name].subscribers.push(this.updateComponent);
+              node.value[name].notifySubscribers();
+            }
+        }
+      }
+    }
   });
 
   return silo;
