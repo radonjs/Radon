@@ -10,48 +10,48 @@ const types = require('./constants.js');
 
 // ==================> SILO TESTING <=================== \\
 
-const AppState = new ConstructorNode('AppState');
+// const AppState = new ConstructorNode('AppState');
 
-AppState.initializeState({
-  name: 'Han',
-  age: 25
-})
+// AppState.initializeState({
+//   name: 'Han',
+//   age: 25
+// })
 
-AppState.initializeModifiers({
-  age: {
-    incrementAge: (current, payload) => {
-      return current + payload;
-    }
-  }
-});
+// AppState.initializeModifiers({
+//   age: {
+//     incrementAge: (current, payload) => {
+//       return current + payload;
+//     }
+//   }
+// });
 
-const NavState = new ConstructorNode('NavState', 'AppState');
+// const NavState = new ConstructorNode('NavState', 'AppState');
 
-NavState.initializeState({
-  name: 'Han',
-  cart: {one: 1, array: [1,2,3, {test: 'test'}]}
-  // cart: [{two: 2, three: [1,2,3]}, 5, 10]
-})
+// NavState.initializeState({
+//   name: 'Han',
+//   cart: {one: 1, array: [1,2,3, {test: 'test'}]}
+//   // cart: [{two: 2, three: [1,2,3]}, 5, 10]
+// })
 
-NavState.initializeModifiers({
-  cart: {
-    updateCartItem: (current, index, payload) => {
-      return ++current;
-    },
-    addItem: (current, payload) => {
-      current.newThing = 'A new thing';
-      // current.push(payload);
-      return current;
-    }
-  }
-});
+// NavState.initializeModifiers({
+//   cart: {
+//     updateCartItem: (current, index, payload) => {
+//       return ++current;
+//     },
+//     addItem: (current, payload) => {
+//       current.newThing = 'A new thing';
+//       // current.push(payload);
+//       return current;
+//     }
+//   }
+// });
 
-const ButtState = new ConstructorNode('ButtState');
-ButtState.parent = 'NavState';
+// const ButtState = new ConstructorNode('ButtState');
+// ButtState.parent = 'NavState';
 
-ButtState.initializeState({
-  butt: 'Butt'
-})
+// ButtState.initializeState({
+//   butt: 'Butt'
+// })
 
 //==================> SILO TESTING ENDED <===================\\
 
@@ -129,36 +129,36 @@ function combineNodes(...args) {
   });
   
   applyToSilo(node => {
-    // if (node.type === types.OBJECT || node.type === types.ARRAY) {
-    //   node.modifiers.keySubscribe = (key, ComponentToBind) => {
-    //     const name = node.name + "_" + key;
-    //     return class Component extends React.Component {
-    //         constructor() {
-    //           super();
+    if (node.type === types.OBJECT || node.type === types.ARRAY) {
+      node.modifiers.keySubscribe = (key, ComponentToBind) => {
+        const name = node.name + "_" + key;
+        return class Component extends React.Component {
+            constructor() {
+              super();
 
-    //           this.updateComponent = this.updateComponent.bind(this);
-    //         }
+              this.updateComponent = this.updateComponent.bind(this);
+            }
 
-    //         render() {
-    //           let newState = {};
-    //           if (this.updatedState) {
-    //             newState = this.updatedState;
-    //           }
-    //           return (<ComponentToBind {...this.props} {...newState} />);
-    //         }
+            render() {
+              let newState = {};
+              if (this.updatedState) {
+                newState = this.updatedState;
+              }
+              return (<ComponentToBind {...this.props} {...newState} />);
+            }
 
-    //         updateComponent(updatedState) {
-    //             this.updatedState = updatedState;
-    //             this.forceUpdate();
-    //         }
+            updateComponent(updatedState) {
+                this.updatedState = updatedState;
+                this.forceUpdate();
+            }
 
-    //         componentWillMount () {
-    //           node.value[name].subscribers.push(this.updateComponent);
-    //           node.value[name].notifySubscribers();
-    //         }
-    //     }
-    //   }
-    // }
+            componentWillMount () {
+              node.value[name].subscribers.push(this.updateComponent);
+              node.value[name].notifySubscribers();
+            }
+        }
+      }
+    }
   });
 
   return silo;
@@ -181,12 +181,12 @@ function applyToSilo(callback) {
   }
 }
 
-combineNodes(ButtState, NavState, AppState); // testing purposes
-// combineNodes(AppState, NavState); // testing purposes
+// combineNodes(ButtState, NavState, AppState); // testing purposes
+// // combineNodes(AppState, NavState); // testing purposes
 
-setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
-setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
+// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
 
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
