@@ -243,7 +243,23 @@ function combineNodes(...args) {
       }
 
       function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
+                               //needs edge cases for when the value is an object, and for the root node RMBL
         applyToSilo(node => {
+          const vNode = new VirtualNode;
+          vNode.name = node.name;
+          //I need to generate an ID for each node RMBL
+          //each node's ID is a snake_case string that represents a 
+          //route to that node from the top of the silo by name
+
+          //need to index each node in the virtualSilo with its ID   RMBL
+          //also need to give each vnode an ID. (needs to be unique) RMBL
+          vNode.parent = virtualSilo[node.parent.name] //this wont work RMBL
+
+          
+
+          vNode.id = virtualSilo[node.parent.id]
+
+          const vNode = new VirtualNode(options)
           //create a new vNode
           //add parent?
           //add name
