@@ -208,6 +208,7 @@ function combineNodes(...args) {
   });
   
   
+
   applyToSilo(node => {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, ComponentToBind) => {
