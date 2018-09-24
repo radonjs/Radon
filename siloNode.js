@@ -63,7 +63,17 @@ class SiloNode {
     return this._id;
   }
 
-  //there's no setter for the ID because you cant set it directly
+  //there's no setter for the ID because you cant set it directly. you have to use issueID
+
+  //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
+  //have had issueID called on it before. use applyToSilo to make sure it runs in the right order
+  issueID(){
+    if(this.parent === null){ //its the root node
+      this.id = name;
+    } else {                  //its not the root node
+      this.id = this.parent.id + '_' + this.name;
+    }
+  }
 
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
