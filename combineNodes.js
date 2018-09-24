@@ -207,6 +207,7 @@ function combineNodes(...args) {
     silo[key] = temp[key];
   });
   
+
   
 
   applyToSilo(node => {
