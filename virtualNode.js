@@ -1,11 +1,11 @@
 
 
 class VirtualNode {
-    constructor () {
-        this.parent;
+    constructor (parent, name, id) {
+        this.parent = parent;
+        this.name = name;
+        this.id = id;
         this.value;
-        this.name;
-        this.id;
     }
 
     //the modifiers need to be put in dynamically,
