@@ -1,15 +1,16 @@
 // import state class for instanceof check
-const StateNode = require('./stateNode.js');
+const ConstructorNode = require('./constructorNode.js');
 const SiloNode = require('./siloNode.js');
+const types = require('./constants.js');
 
 // import state class for instanceof check
-// import StateNode from './stateNode.js';
+// import ConstructorNode from './constructorNode.js';
 // import SiloNode from './siloNode.js';
+// import * as types from './constants.js'
 
 // ==================> SILO TESTING <=================== \\
 
-// const AppState = new StateNode('AppState');
-// // AppState.name = 'AppState'; -> optional if not set in constructor
+// const AppState = new ConstructorNode('AppState');
 
 // AppState.initializeState({
 //   name: 'Han',
@@ -24,12 +25,11 @@ const SiloNode = require('./siloNode.js');
 //   }
 // });
 
-// const NavState = new StateNode('NavState');
-// NavState.parent = 'AppState';
+// const NavState = new ConstructorNode('NavState', 'AppState');
 
 // NavState.initializeState({
 //   name: 'Han',
-//   cart: []
+//   cart: [{two: 2, three: [1,2,3]}, 5, 10]
 // })
 
 // NavState.initializeModifiers({
@@ -44,7 +44,7 @@ const SiloNode = require('./siloNode.js');
 //   }
 // });
 
-// const ButtState = new StateNode('ButtState');
+// const ButtState = new ConstructorNode('ButtState');
 // ButtState.parent = 'NavState';
 
 // ButtState.initializeState({
@@ -53,246 +53,166 @@ const SiloNode = require('./siloNode.js');
 
 //==================> SILO TESTING ENDED <===================\\
 
-// ===========> async TEST stuff <========== \\
-
-// function delay(time) {
-//   return new Promise((resolve, reject) => {
-//     setTimeout(resolve, time);
-//   })
-// }
-
-// const nodeA = new SiloNode(5, null, {
-//   increment: (current, payload) => {
-//     return current + payload;
-//   },
-
-//   asyncIncrement: (current, payload) => {
-//     return delay(500)
-//     .then(() => {
-//       const temp = current + payload;
-//       return temp;
-//     });
-//   }
-// });
-
-// console.log(nodeA.value);
-// nodeA.modifiers.asyncIncrement(10);
-// nodeA.modifiers.increment(12);
-
-// setTimeout(() => {
-//   console.log(nodeA.value);
-// }, 800);
-
-// ===========> async TEST stuff end <========== \\
-
 const silo = {};
 
-// handles nested objects in state by converting every key/index into a node
-// also it is recursive
-// IMPORTANT nested object nodes are named after their parent and the key: ex: cart_one
-function handleNestedObject(objName, obj, parent) {
-  const objChildren = {};
-  let type, keys;
-
-  // determine if array or other object
-  if (Array.isArray(obj.value)) {
-    keys = obj.value;
-    type = 'ARRAY';
-  } else {
-    keys = Object.keys(obj.value);
-    type = 'OBJECT'
-  }
-
-  const node = new SiloNode(objName, objChildren, parent, obj.modifiers, type);
-  
-  if (Array.isArray(obj.value) && obj.value.length > 0) {
-    obj.value.forEach((val, i) => {
-      if (typeof val === 'object') objChildren[`${objName}_${i}`] = handleNestedObject(`${objName}_${i}`, {value: val}, node);
-      else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, val, node);
-    })
-  } 
-  
-  else if (keys.length > 0) {
-    keys.forEach(key => {
-      if (typeof obj.value[key] === 'object') objChildren[`${objName}_${key}`] = handleNestedObject(key, {value: obj.value[key]}, node);
-      else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, obj.value[key], node);
-    })
-  }
-
-  // method below created to ensure that all values have been added to the objChild before
-  // modifiers are linked (needed for objects)
-  node.linkModifiers();
-  return node;
-}
-
-// combineNodes takes all of the StateNodes created by the developer. It then creates SiloNodes from the
-// StateNodes and organizes them into a single nested object, the silo
-
 function combineNodes(...args) {
-  // you called this function without passing stuff? Weird
-  if (args.length === 0) return;
+  if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
 
-  // maps the state nodes into a hashtable
+  // hastable accounts for passing in constructorNodes in any order. 
+  // hashtable organizes all nodes into parent-child relationships
   const hashTable = {};
-  args.forEach(node => {
-    // all nodes must be an instance of state node (must import state class)
-    //console.log(node, node instanceof StateNode);
-    //if (!(node instanceof StateNode)) throw new Error('only state objects can be passed into combineNodes');
-
-    if (node.parent === null) {
-      // only one node can be the root
-      if (!hashTable.root) hashTable.root = [node];
-      else throw new Error('only one state node can have null parent');
+  args.forEach(constructorNode => {
+    if (constructorNode.parent === null) {
+      // this is the root node, only one constructorNode can have a parent of null
+      if (!hashTable.root) hashTable.root = [constructorNode];
+      else throw new Error('Only one constructor node can have null parent');
     } else {
-      if (!hashTable[node.parent]) hashTable[node.parent] = [node];
-      else hashTable[node.parent].push(node);
+      if (!hashTable[constructorNode.parent]) hashTable[constructorNode.parent] = [constructorNode];
+      // if parent already exists, and node being added will append to the array of children
+      else hashTable[constructorNode.parent].push(constructorNode);
     }
   }) 
 
-  // now we can more easily build the silo object
-  if (!hashTable.root) {
-    //problem we must address... ?
-    throw new Error('at least one state node must have a null parent');
-  }
+  // ensure there is a defined root
+  if (!hashTable.root) throw new Error('At least one constructor node must have a null parent');
 
-  // recursively map to the silo (called below)
-  function mapToSilo(node = 'root', parent = null) {
+  // recursive function that will create siloNodes and return them to a parent
+  function mapToSilo(constructorNode = 'root', parentConstructorNode = null) {
+    const constructorNodeName = (constructorNode === 'root') ? 'root' : constructorNode.name;
 
-    // determine if node variable is root
-    const nodeName = (node === 'root') ? node : node.name;
+    // recursive base case, we only continue if the constructorNode has constructorNode children
+    if (!hashTable[constructorNodeName]) return;
 
-    // if a piece of state has no children: recursive base case
-    if (!hashTable[nodeName]) return;
+    const children = {};
 
-    const allChildren = {};
+    // loop through the children of constructorNode
+    hashTable[constructorNodeName].forEach(currConstructorNode => {
+      const valuesOfCurrSiloNode = {};
+      children[currConstructorNode.name] = new SiloNode(currConstructorNode.name, valuesOfCurrSiloNode, parentConstructorNode, {}, types.CONTAINER);
+      
+      // abstract some variables
+      const currSiloNode = children[currConstructorNode.name];
+      const stateOfCurrConstructorNode = currConstructorNode.state;
 
-    // inspect all children of the current state node
-    hashTable[nodeName].forEach(child => {
-
-      const nodeVal = {};
-      allChildren[child.name] = new SiloNode(child.name, nodeVal, parent, {}, 'NESTEDSTATE');
-      const thisStateNode = child;
-      const thisSiloNode = allChildren[child.name];
-      const stateObj = child.state;
-
-      // create SiloNodes for all the variables in the child state node
-      Object.keys(stateObj).forEach(varName => {
-        // handles non primitive data types
-        if (typeof stateObj[varName].value === 'object') {
-          nodeVal[varName] = handleNestedObject(varName, stateObj[varName], thisSiloNode);
+      // create SiloNodes for all the variables in the currConstructorNode
+      Object.keys(stateOfCurrConstructorNode).forEach(varInConstructorNodeState => {
+        // creates siloNodes for object variables
+        if (typeof stateOfCurrConstructorNode[varInConstructorNodeState].value === 'object') {
+          valuesOfCurrSiloNode[varInConstructorNodeState] = deconstructObjectIntoSiloNodes(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState], currSiloNode);
         }
-        // primitives only
+        // creates siloNodes for primitive variables
         else {
-          nodeVal[varName] = new SiloNode(varName, stateObj[varName].value, thisSiloNode, stateObj[varName].modifiers);
-          nodeVal[varName].linkModifiers();
+          valuesOfCurrSiloNode[varInConstructorNodeState] = new SiloNode(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState].value, currSiloNode, stateOfCurrConstructorNode[varInConstructorNodeState].modifiers);
+          valuesOfCurrSiloNode[varInConstructorNodeState].linkModifiers();
         }
       })
 
-      // recurse for grandbabiessss
-      const babies = mapToSilo(thisStateNode, thisSiloNode);
-      if (babies) {
-        Object.keys(babies).forEach(baby => {
-          nodeVal[baby] = babies[baby];
+      // recursively check to see if the current constructorNode/siloNode has any children 
+      const siloNodeChildren = mapToSilo(currConstructorNode, currSiloNode);
+      if (siloNodeChildren) { 
+        Object.keys(siloNodeChildren).forEach(siloNode => {
+          valuesOfCurrSiloNode[siloNode] = siloNodeChildren[siloNode];
         })
       }
     })
-    return allChildren;
+    return children;
   }
 
-  // initiate recurse function
-  const temp = mapToSilo();
+  // rootState
+  const wrappedRootSiloNode = mapToSilo();
 
   // will always only be a single key (the root) that is added into the silo
-  Object.keys(temp).forEach(key => {
-    silo[key] = temp[key];
+  Object.keys(wrappedRootSiloNode).forEach(rootSiloNode => {
+    silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
+  // DO NOT DELETE
   applyToSilo(node => {
-    if(node.type === 'OBJECT' || node.type === "ARRAY"){
-      node.modifiers.keySubscribe = (key, ComponentToBind) => {
-        const name = node.name + "_" + key;
-        return class Component extends React.Component {
-            constructor() {
-              super();
+    // if (node.type === types.OBJECT || node.type === types.ARRAY) {
+    //   node.modifiers.keySubscribe = (key, ComponentToBind) => {
+    //     const name = node.name + "_" + key;
+    //     return class Component extends React.Component {
+    //         constructor() {
+    //           super();
 
-              this.updateComponent = this.updateComponent.bind(this);
-            }
+    //           this.updateComponent = this.updateComponent.bind(this);
+    //         }
 
-            render() {
-              let newState = {};
-              if(this.updatedState) {
-                newState = this.updatedState;
-              }
-              return (<ComponentToBind {...this.props} {...newState} />);
-            }
+    //         render() {
+    //           let newState = {};
+    //           if (this.updatedState) {
+    //             newState = this.updatedState;
+    //           }
+    //           return (<ComponentToBind {...this.props} {...newState} />);
+    //         }
 
-            updateComponent(updatedState) {
-                this.updatedState = updatedState;
-                this.forceUpdate();
-            }
+    //         updateComponent(updatedState) {
+    //             this.updatedState = updatedState;
+    //             this.forceUpdate();
+    //         }
 
-            componentWillMount () {
-              node.value[name]._subscribers.push(this.updateComponent);
-              node.value[name].notifySubscribers();
-            }
-        }
-      }
-      // node.modifiers.keySubscribe = (key, callback) => {
-      //   const name = node.name + "_" + key;
-      //   // return class Component extends React.Component {
-      //   //   constructor() {
-      //   //     super();
-
-      //   //     this.updateComponent = this.updateComponent.bind(this);
-      //   //   }
-
-      //   //   render() {
-      //   //     if(this.updatedState){
-      //   //         this.props = Object.assign(this.props.props, this.props, this.updatedState);
-      //   //     } else {
-      //   //         this.props = Object.assign({i: this.props.i}, this.props.props);
-      //   //     }
-      //   //     console.log('props', this.props)
-      //   //     return (callback);
-      //   //   }
-
-      //   //   componentDidMount () {
-      //   //     node.value[name]._subscribers.push(this.updateComponent);
-      //   //     console.log(node);
-      //   //     this.updateComponent();
-      //   //     //node.notifySubscribers();
-      //   //     console.log(this.props)
-      //   //     console.log('I DID MOUNT');
-      //   //   }
-
-      //   //   updateComponent(updatedState) {
-      //   //     console.log('COMPONENT RERENDER')
-      //   //     this.updatedState = updatedState;
-      //   //     this.forceUpdate();
-      //   //   }
-      //   // }
-      // }
-    }
+    //         componentWillMount () {
+    //           node.value[name].subscribers.push(this.updateComponent);
+    //           node.value[name].notifySubscribers();
+    //         }
+    //     }
+    //   }
+    // }
   });
 
   return silo;
 }
 
-function applyToSilo(callback){
+function deconstructObjectIntoSiloNodes(varName, varInConstructoNodeState, parentSiloNode) {
+  const objChildren = {};
+  let type, keys;
 
-  for(let i in silo){
-    inner(silo[i], callback)
+  // determine if the object is an array or not
+  if (Array.isArray(varInConstructoNodeState.value)) {
+    keys = varInConstructoNodeState.value;
+    type = types.ARRAY;
+  } else {
+    keys = Object.keys(varInConstructoNodeState.value);
+    type = types.OBJECT;
   }
 
-  function inner(head, callback){
+  const currSiloNode = new SiloNode(varName, objChildren, parentSiloNode, varInConstructoNodeState.modifiers, type);
+  
+  if (Array.isArray(varInConstructoNodeState.value) && varInConstructoNodeState.value.length > 0) {
+    // loop through the array
+    varInConstructoNodeState.value.forEach((indexedVal, i) => {
+      // recurse if the array has objects stored in its indices
+      if (typeof indexedVal === 'object') objChildren[`${varName}_${i}`] = deconstructObjectIntoSiloNodes(`${varName}_${i}`, {value: indexedVal}, currSiloNode);
+      else objChildren[`${varName}_${i}`] = new SiloNode(`${varName}_${i}`, indexedVal, currSiloNode);
+    })
+  } 
+  
+  else if (keys.length > 0) {
+    // loop through object
+    keys.forEach(key => {
+      // recurse if the object has objects stored in its values
+      if (typeof varInConstructoNodeState.value[key] === 'object') objChildren[`${varName}_${key}`] = deconstructObjectIntoSiloNodes(key, {value: varInConstructoNodeState.value[key]}, currSiloNode);
+      else objChildren[`${varName}_${key}`] = new SiloNode(`${varName}_${key}`, varInConstructoNodeState.value[key], currSiloNode);
+    })
+  }
+
+  currSiloNode.linkModifiers();
+  return currSiloNode;
+}
+
+function applyToSilo(callback) {
+  // accessing the single root in the silo
+  Object.keys(silo).forEach(siloNodeRootKey => {
+    inner(silo[siloNodeRootKey], callback);
+  })
+
+  function inner (head, callback) {
     callback(head);
-
-    if(typeof head.value !== 'object'){ return } //base case
-
+    if (typeof head.value !== 'object') return; // recursive base case
     else {
-      for(let i in head.value){
-        inner(head.value[i], callback)
-      }
+      Object.keys(head.value).forEach(key => {
+        inner(head.value[key], callback);
+      })
     }
   }
 }
@@ -301,11 +221,6 @@ function applyToSilo(callback){
 // combineNodes(AppState, NavState); // testing purposes
 
 // setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-// setTimeout(() => {console.log('Im adding', silo.AppState.value.NavState.getState().addItem({five: 5}))}, 1001);
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1005);
-// setTimeout(() => {console.log('Im adding', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1010);
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1012);
-
 // setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
@@ -318,43 +233,43 @@ function applyToSilo(callback){
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
-silo.subscribe = (component, name) => {
-  if(!name && !component.prototype){
-      throw Error('you cant use an anonymous function in subscribe without a name argument');
+silo.subscribe = (component, name) => { //renderFunction
+  if(!name && !component.prototype){ //reformat to remove this if
+      throw new Error('you cant use an anonymous function in subscribe without a name argument'); //use new
   } else if (!name && !!component.prototype){
       name = component.prototype.constructor.name + 'State'
   }
   
-  const searchSilo = (head, name) => {
+  const searchSilo = (head /*currSiloNode*/, name) => {
       let children;
-      if(typeof head.value !== 'object') return null;
+      if (typeof head.value !== 'object') return null; //Use SiloNode Type System
       else children = head.value;
 
-      for(let i in children){
-          if(i === name){
+      for (let i in children){ //air bnb rules plz
+          if (i === name){
               return children[i]
           } else {
               let foundNode = searchSilo(children[i], name);
-              if(!!foundNode){return foundNode};
+              if (!!foundNode){return foundNode};
           }
       }
   }
 
   let foundNode;
   let subscribedAtIndex;
-  for(let i in silo){
-    if(silo[i].constructor === SiloNode){
-      if(i === name) {
+  for (let i in silo) { //air bnb plz
+    if (silo[i].constructor === SiloNode){
+      if (i === name) {
         foundNode = silo[i];
       } else {
         foundNode = searchSilo(silo[i], name)
       }
-      if(!!foundNode){
-        foundNode._subscribers.push(component)
-        if(typeof foundNode.value === 'object'){
-          for(let i in foundNode.value){
-            if(i.slice(-5) !== 'State'){
-              subscribedAtIndex = foundNode.value[i]._subscribers.push(component);
+      if (!!foundNode){
+        foundNode.subscribers.push(component)
+        if (typeof foundNode.value === 'object'){
+          for (let i in foundNode.value){
+            if (i.slice(-5) !== 'State'){
+              subscribedAtIndex = foundNode.value[i].subscribers.push(component);
             }
           }
         }
@@ -362,20 +277,13 @@ silo.subscribe = (component, name) => {
     }
   }
   
-  if(foundNode) {
-    component(foundNode.getState());    
-  }
+  if (foundNode) component(foundNode.getState());
 
   function unsubscribe () {
     foundNode._subscribers.splice(subscribedAtIndex, 1);
   }
 
   return unsubscribe;
-
-    //if there's no name assume the name is component name + 'State'
-    //recursively search through silo from headnode
-    //find something with name === name;
-    //add to its subscribers the component;
 }
 
 // export default combineNodes;
