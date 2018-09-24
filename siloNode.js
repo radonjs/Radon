@@ -7,6 +7,7 @@ class SiloNode {
     this._subscribers = [];
     this._parent = parent; // circular silo node
     this._type = type;
+    this._id = id;
 
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
@@ -57,6 +58,12 @@ class SiloNode {
   get type() {
     return this._type;
   }
+
+  get id() {
+    return this._id;
+  }
+
+  //there's no setter for the ID because you cant set it directly
 
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
