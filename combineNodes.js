@@ -100,7 +100,7 @@ function combineNodes(...args) {
       Object.keys(stateOfCurrConstructorNode).forEach(varInConstructorNodeState => {
         // creates siloNodes for object variables
         if (typeof stateOfCurrConstructorNode[varInConstructorNodeState].value === 'object') {
-          valuesOfCurrSiloNode[varInConstructorNodeState] = deconstructObjectIntoSiloNodes(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState], currSiloNode);
+          valuesOfCurrSiloNode[varInConstructorNodeState] = currSiloNode.deconstructObjectIntoSiloNodes(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState], currSiloNode, true);
         }
         // creates siloNodes for primitive variables
         else {
@@ -164,43 +164,6 @@ function combineNodes(...args) {
   return silo;
 }
 
-function deconstructObjectIntoSiloNodes(varName, varInConstructoNodeState, parentSiloNode) {
-  const objChildren = {};
-  let type, keys;
-
-  // determine if the object is an array or not
-  if (Array.isArray(varInConstructoNodeState.value)) {
-    keys = varInConstructoNodeState.value;
-    type = types.ARRAY;
-  } else {
-    keys = Object.keys(varInConstructoNodeState.value);
-    type = types.OBJECT;
-  }
-
-  const currSiloNode = new SiloNode(varName, objChildren, parentSiloNode, varInConstructoNodeState.modifiers, type);
-  
-  if (Array.isArray(varInConstructoNodeState.value) && varInConstructoNodeState.value.length > 0) {
-    // loop through the array
-    varInConstructoNodeState.value.forEach((indexedVal, i) => {
-      // recurse if the array has objects stored in its indices
-      if (typeof indexedVal === 'object') objChildren[`${varName}_${i}`] = deconstructObjectIntoSiloNodes(`${varName}_${i}`, {value: indexedVal}, currSiloNode);
-      else objChildren[`${varName}_${i}`] = new SiloNode(`${varName}_${i}`, indexedVal, currSiloNode);
-    })
-  } 
-  
-  else if (keys.length > 0) {
-    // loop through object
-    keys.forEach(key => {
-      // recurse if the object has objects stored in its values
-      if (typeof varInConstructoNodeState.value[key] === 'object') objChildren[`${varName}_${key}`] = deconstructObjectIntoSiloNodes(`${varName}_${key}`, {value: varInConstructoNodeState.value[key]}, currSiloNode);
-      else objChildren[`${varName}_${key}`] = new SiloNode(`${varName}_${key}`, varInConstructoNodeState.value[key], currSiloNode);
-    })
-  }
-
-  currSiloNode.linkModifiers();
-  return currSiloNode;
-}
-
 function applyToSilo(callback) {
   // accessing the single root in the silo
   Object.keys(silo).forEach(siloNodeRootKey => {
@@ -221,7 +184,7 @@ function applyToSilo(callback) {
 combineNodes(ButtState, NavState, AppState); // testing purposes
 // combineNodes(AppState, NavState); // testing purposes
 
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
+setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
 setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
 setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
 

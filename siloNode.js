@@ -108,7 +108,7 @@ class SiloNode {
     return run;
   }
 
-  deconstructObjectIntoSiloNodes(objName = this.name, objectToDeconstruct = this, parent = this.parent) {
+  deconstructObjectIntoSiloNodes(objName = this.name, objectToDeconstruct = this, parent = this.parent, runLinkedMods = false) {
     const objChildren = {};
     let type, keys;
   
@@ -127,7 +127,7 @@ class SiloNode {
       // loop through the array
       objectToDeconstruct.value.forEach((indexedVal, i) => {
         // recurse if the array has objects stored in its indices
-        if (typeof indexedVal === 'object') objChildren[`${objName}_${i}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${i}`, {value: indexedVal}, newSiloNode);
+        if (typeof indexedVal === 'object') objChildren[`${objName}_${i}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${i}`, {value: indexedVal}, newSiloNode, runLinkedMods);
         else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, indexedVal, newSiloNode);
       })
     } 
@@ -136,12 +136,13 @@ class SiloNode {
       // loop through object
       keys.forEach(key => {
         // recurse if the object has objects stored in its values
-        if (typeof objectToDeconstruct.value[key] === 'object') objChildren[`${objName}_${key}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${key}`, {value: objectToDeconstruct.value[key]}, newSiloNode);
+        if (typeof objectToDeconstruct.value[key] === 'object') objChildren[`${objName}_${key}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${key}`, {value: objectToDeconstruct.value[key]}, newSiloNode, runLinkedMods);
         else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, objectToDeconstruct.value[key], newSiloNode);
       })
     }
 
-    newSiloNode.value = objChildren;
+    if (runLinkedMods) newSiloNode.linkModifiers();
+
     return newSiloNode;
   }
 
