@@ -29,7 +29,8 @@ const types = require('./constants.js');
 
 // NavState.initializeState({
 //   name: 'Han',
-//   cart: [{two: 2, three: [1,2,3]}, 5, 10]
+//   cart: {one: 1, array: [1,2,3, {test: 'test'}]}
+//   // cart: [{two: 2, three: [1,2,3]}, 5, 10]
 // })
 
 // NavState.initializeModifiers({
@@ -38,7 +39,8 @@ const types = require('./constants.js');
 //       return ++current;
 //     },
 //     addItem: (current, payload) => {
-//       current.push(payload);
+//       current.newThing = 'A new thing';
+//       // current.push(payload);
 //       return current;
 //     }
 //   }
@@ -221,6 +223,7 @@ function applyToSilo(callback) {
 
 // setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
 // setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
+// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
 
 // ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
 
