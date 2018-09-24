@@ -240,6 +240,19 @@ function combineNodes(...args) {
             }
         }
       }
+
+      function virtualize () {
+        applyToSilo(node => {
+          //create a new vNode
+          //add parent?
+          //add name
+          //add value, if object, add keysub and dont add value
+
+          //change siloNode
+          //give it a pointer to vNode
+          //
+        })
+      }
       // node.modifiers.keySubscribe = (key, callback) => {
       //   const name = node.name + "_" + key;
       //   // return class Component extends React.Component {
