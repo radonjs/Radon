@@ -85,7 +85,8 @@ import React from 'react';
 
 // ===========> async TEST stuff end <========== \\
 
-const silo = {};
+const silo = {};       //more detailed and less encapsulated silo that Radon interacts with
+const virtualSilo = {} //simplified version of the silo that the developer is exposed to
 
 // handles nested objects in state by converting every key/index into a node
 // also it is recursive
@@ -241,7 +242,7 @@ function combineNodes(...args) {
         }
       }
 
-      function virtualize () {
+      function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
         applyToSilo(node => {
           //create a new vNode
           //add parent?
@@ -253,41 +254,7 @@ function combineNodes(...args) {
           //
         })
       }
-      // node.modifiers.keySubscribe = (key, callback) => {
-      //   const name = node.name + "_" + key;
-      //   // return class Component extends React.Component {
-      //   //   constructor() {
-      //   //     super();
-
-      //   //     this.updateComponent = this.updateComponent.bind(this);
-      //   //   }
-
-      //   //   render() {
-      //   //     if(this.updatedState){
-      //   //         this.props = Object.assign(this.props.props, this.props, this.updatedState);
-      //   //     } else {
-      //   //         this.props = Object.assign({i: this.props.i}, this.props.props);
-      //   //     }
-      //   //     console.log('props', this.props)
-      //   //     return (callback);
-      //   //   }
-
-      //   //   componentDidMount () {
-      //   //     node.value[name]._subscribers.push(this.updateComponent);
-      //   //     console.log(node);
-      //   //     this.updateComponent();
-      //   //     //node.notifySubscribers();
-      //   //     console.log(this.props)
-      //   //     console.log('I DID MOUNT');
-      //   //   }
-
-      //   //   updateComponent(updatedState) {
-      //   //     console.log('COMPONENT RERENDER')
-      //   //     this.updatedState = updatedState;
-      //   //     this.forceUpdate();
-      //   //   }
-      //   // }
-      // }
+      
     }
   });
 
