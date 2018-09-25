@@ -194,12 +194,17 @@ function combineNodes(...args) {
   //           }
   //       }
   //     }
+  //   }
+  // }
 
       function identify () {
         //each node's ID is a snake_case string that represents a 
         //route to that node from the top of the silo by name
-        applyToSilo(node => node.issueID());
+        applyToSilo(node => {
+          node.issueID()
+        });
       }
+      identify();
 
       function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
         function virtualizePermittedChildren(node){
@@ -255,11 +260,8 @@ function combineNodes(...args) {
         })
       }
       
+      return silo;
     }
-  });
-
-  return silo;
-}
 
 function applyToSilo(callback) {
   // accessing the single root in the silo
@@ -268,11 +270,15 @@ function applyToSilo(callback) {
   })
 
   function inner (head, callback) {
-    callback(head);
+    if(head instanceof SiloNode){
+      callback(head);
+    }
     if (typeof head.value !== 'object') return; // recursive base case
     else {
       Object.keys(head.value).forEach(key => {
-        inner(head.value[key], callback);
+        if(head.value[key] instanceof SiloNode){
+          inner(head.value[key], callback);
+        }
       })
     }
   }
@@ -351,3 +357,9 @@ silo.subscribe = (component, name) => { //renderFunction
 
 // export default combineNodes;
 module.exports = combineNodes;
+
+
+
+
+
+
