@@ -87,10 +87,11 @@ class SiloNode {
   //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
   //have had issueID called on it before. use applyToSilo to make sure it runs in the right order
   issueID(){
+    this._id = 0;
     if(this.parent === null){ //its the root node
-      this.id = name;
+      this._id = this.name;
     } else {                  //its not the root node
-      this.id = this.parent.id + '_' + this.name;
+      this._id = this.parent.id + '.' + this.name;
     }
   }
   
