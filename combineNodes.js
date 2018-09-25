@@ -243,34 +243,63 @@ function combineNodes(...args) {
       }
 
       function identify () {
+        //each node's ID is a snake_case string that represents a 
+        //route to that node from the top of the silo by name
         applyToSilo(node => node.issueID());
       }
 
       function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
                                //needs edge cases for when the value is an object, and for the root node RMBL
+        function virtualizePermittedChildren(node){
+          node.value.forEach(key => {
+            if(node.value[key].type !== 'CONTAINER'){
+              //either its an object or a primitive
+              //if its an an object, recurse
+              if(node.value[key].type !== 'PRIMITIVE'){
+                virtualizePermittedChildren(node.value[key])
+              } else {
+                const vNode = new VirtualNode;
+                vNode.name = node.name;
+                virtualSilo[node.id] = vNode;
+                vNode.parent = virtualSilo[node.parent.id]
+                vNode.id = node.id;
+
+                vNode.value = node.value;
+              }
+            }
+          })
+        }
+
         applyToSilo(node => {
-          const vNode = new VirtualNode;
-          vNode.name = node.name;
-          //I need to generate an ID for each node                      RMBL
-          //each node's ID is a snake_case string that represents a 
-          //route to that node from the top of the silo by name
+          if(!!virtualSilo[node.id]){
+            const vNode = new VirtualNode;
+            vNode.name = node.name;
+  
+            //each node is indexed in the virtualSilo at its ID
+            virtualSilo[node.id] = vNode;
+            
+            //each node points to its parent in the virtual silo
+            vNode.parent = virtualSilo[node.parent.id]
+            
+            //each node has the id of its corresponding silo node
+            vNode.id = node.id;
+  
+            //Dealing with values -v-
+              //you should have access to the children that aren't "containers" (things that were statenodes in the beginning)
+            if(node.type === 'PRIMITIVE'){
+              vNode.value = node.value;
+            } else {
+              
 
-          //need to index each node in the virtualSilo with its ID      RMBL
-          //also need to give each vnode an ID. (needs to be unique)    RMBL
-          vNode.parent = virtualSilo[node.parent.name] //this wont work RMBL
-          
-
-          vNode.id = virtualSilo[node.parent.id]
-
-          const vNode = new VirtualNode(options)
-          //create a new vNode
-          //add parent?
-          //add name
-          //add value, if object, add keysub and dont add value
-
-          //change siloNode
-          //give it a pointer to vNode
-          //
+              if(node.value.type === 'CONTAINER'){
+                //Every time I'm at a CONTAINER node
+                //I need to recursively run through and create all its children from the bottom up
+                //I can do this without eventually running over them again in applySilo with the if statement up at the top
+                virtualizePermittedChildren(node);
+              }
+              
+            }
+          }
         })
       }
       
