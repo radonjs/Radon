@@ -202,7 +202,6 @@ function combineNodes(...args) {
       }
 
       function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
-                               //needs edge cases for when the value is an object, and for the root node RMBL
         function virtualizePermittedChildren(node){
           node.value.forEach(key => {
             if(node.value[key].type !== 'CONTAINER'){
