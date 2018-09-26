@@ -2,7 +2,7 @@
 const ConstructorNode = require('./constructorNode.js');
 const SiloNode = require('./siloNode.js');
 const types = require('./constants.js');
-
+const VirtualNode = require('./virtualNode.js');
 // import state class for instanceof check
 // import ConstructorNode from './constructorNode.js';
 // import SiloNode from './siloNode.js';
@@ -207,61 +207,50 @@ function combineNodes(...args) {
       identify();
 
       function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
-        function virtualizePermittedChildren(node){
-          node.value.forEach(key => {
-            if(node.value[key].type !== 'CONTAINER'){
-              //either its an object or a primitive
-              //if its an an object, recurse
-              if(node.value[key].type !== 'PRIMITIVE'){
-                virtualizePermittedChildren(node.value[key])
-              } else {
-                const vNode = new VirtualNode;
-                vNode.name = node.name;
-                virtualSilo[node.id] = vNode;
-                vNode.parent = virtualSilo[node.parent.id]
-                vNode.id = node.id;
-
-                vNode.value = node.value;
-              }
-            }
-          })
-        }
+        console.log('Virtualizing!');
 
         applyToSilo(node => {
-          if(!!virtualSilo[node.id]){
+          if(!virtualSilo[node.id]){
             const vNode = new VirtualNode;
             vNode.name = node.name;
   
             //each node is indexed in the virtualSilo at its ID
             virtualSilo[node.id] = vNode;
-            
+            vNode.type = node.type;
+
+            if(!!node.modifiers){
+              Object.keys(node.modifiers).forEach(key => {
+                vNode[key] = node.modifiers[key];
+              })
+            }
+
+            if(node.type !== 'PRIMITIVE'){
+              //value should be an object, because you have children, and you need somewhere to recieve them!
+              vNode.value = {}
+            }
+
             //each node points to its parent in the virtual silo
-            vNode.parent = virtualSilo[node.parent.id]
+            if(node.parent === null) console.log('found null parent node!');
+            else {
+              vNode.parent = virtualSilo[node.parent.id]
+              if(node.type !== 'CONTAINER'){
+                vNode.parent.value[vNode.name] = vNode;
+              }
+            }
+            
             
             //each node has the id of its corresponding silo node
             vNode.id = node.id;
-  
-            //Dealing with values -v-
-              //you should have access to the children that aren't "containers" (things that were statenodes in the beginning)
-            if(node.type === 'PRIMITIVE'){
-              vNode.value = node.value;
-            } else {
-              
-
-              if(node.value.type === 'CONTAINER'){
-                //Every time I'm at a CONTAINER node
-                //I need to recursively run through and create all its children from the bottom up
-                //I can do this without eventually running over them again in applySilo with the if statement up at the top
-                virtualizePermittedChildren(node);
-              }
-              
-            }
           }
         })
       }
-      
+      virtualize();
+      silo.virtualSilo = virtualSilo;
+
       return silo;
     }
+
+    
 
 function applyToSilo(callback) {
   // accessing the single root in the silo
