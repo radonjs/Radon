@@ -86,6 +86,10 @@ class SiloNode {
     this._subscribers.push(renderFunction)
   }
 
+  removeFromSubscribersAtIndex(index) {
+    this._subscribers.splice(index, 1);
+  }
+
   //there's no setter for the ID because you cant set it directly. you have to use issueID
 
   //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
