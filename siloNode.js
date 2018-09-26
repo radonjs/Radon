@@ -82,6 +82,10 @@ class SiloNode {
     return this._id;
   }
 
+  pushToSubscribers(renderFunction) {
+    this._subscribers.push(renderFunction)
+  }
+
   //there's no setter for the ID because you cant set it directly. you have to use issueID
 
   //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
