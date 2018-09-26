@@ -150,15 +150,15 @@ function applyToSilo(callback) {
   function inner (head, callback) {
     if(head.constructor.name === 'SiloNode'){
       callback(head);
-    }
-    if (head.type === types.PRIMITIVE) return; // recursive base case
-    
-    else {
-      Object.keys(head.value).forEach(key => {
-        if(head.value[key].constructor.name === 'SiloNode'){
-          inner(head.value[key], callback);
-        }
-      })
+      if (head.type === types.PRIMITIVE) return; // recursive base case
+      
+      else {
+        Object.keys(head.value).forEach(key => {
+          if(head.value[key].constructor.name === 'SiloNode'){
+            inner(head.value[key], callback);
+          }
+        })
+      }
     }
   }
 }
