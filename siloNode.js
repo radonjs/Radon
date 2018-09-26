@@ -84,6 +84,7 @@ class SiloNode {
 
   pushToSubscribers(renderFunction) {
     this._subscribers.push(renderFunction)
+    return this._subscribers.length;
   }
 
   removeFromSubscribersAtIndex(index) {
