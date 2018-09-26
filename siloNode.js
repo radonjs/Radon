@@ -82,11 +82,11 @@ class SiloNode {
   }
 
   pushToSubscribers(renderFunction){
-    this._subscribers.push(renderFunction);
+    this.subscribers.push(renderFunction);
   }
 
   removeFromSubscribersAtIndex(index){
-    this._subscribers.slice(index, 1);
+    this.subcribers = this.subscribers.slice(index, 1);
   }
 
   notifySubscribers() {

@@ -171,14 +171,14 @@ function applyToSilo(callback) {
   })
 
   function inner (head, callback) {
-    if(head instanceof SiloNode){
+    if(head.constructor.name === 'SiloNode'){
       callback(head);
     }
-    if (head.type === 'PRIMITIVE') return; // recursive base case
+    if (head.type === types.PRIMITIVE) return; // recursive base case
     
     else {
       Object.keys(head.value).forEach(key => {
-        if(head.value[key] instanceof SiloNode){
+        if(head.value[key].constructor.name === 'SiloNode'){
           inner(head.value[key], callback);
         }
       })
@@ -208,7 +208,7 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
 
   if(!name){
     if(!!renderFunction.prototype){
-      name = renderFunction.prototype.constructor.name + 'STATE';
+      name = renderFunction.prototype.constructor.name + 'State';
     } else {
       throw new Error('You can\'t use an anonymous function in subscribe without a name argument.'); //use new
     }
