@@ -129,34 +129,11 @@ function combineNodes(...args) {
   });
   
   applyToSilo(node => {
-    if (node.type === types.OBJECT || node.type === types.ARRAY) {
-      node.modifiers.keySubscribe = (key, ComponentToBind) => {
+    if(node.type === 'OBJECT' || node.type === "ARRAY"){
+      node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
-        return class Component extends React.Component {
-            constructor() {
-              super();
-
-              this.updateComponent = this.updateComponent.bind(this);
-            }
-
-            render() {
-              let newState = {};
-              if (this.updatedState) {
-                newState = this.updatedState;
-              }
-              return (<ComponentToBind {...this.props} {...newState} />);
-            }
-
-            updateComponent(updatedState) {
-                this.updatedState = updatedState;
-                this.forceUpdate();
-            }
-
-            componentWillMount () {
-              node.value[name].subscribers.push(this.updateComponent);
-              node.value[name].notifySubscribers();
-            }
-        }
+        node.value[name]._subscribers.push(renderFunc);
+        node.value[name].notifySubscribers();
       }
     }
   });
