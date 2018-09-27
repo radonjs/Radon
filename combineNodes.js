@@ -206,14 +206,12 @@ silo.subscribe = (renderFunction, name) => {
       foundNode = node;
     }
   })
-
-  // call renderFunction(foundNode.getState())
   
   function unsubscribe() {
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
 
-  if(!!foundNode){
+  if (!!foundNode) {
     renderFunction(foundNode.getState())
   } else {
     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
