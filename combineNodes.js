@@ -123,10 +123,12 @@ function combineNodes(...args) {
   // rootState
   const wrappedRootSiloNode = mapToSilo();
 
+  
   // will always only be a single key (the root) that is added into the silo
   Object.keys(wrappedRootSiloNode).forEach(rootSiloNode => {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
+  
   
   applyToSilo(node => {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){

@@ -16,7 +16,7 @@ class ConstructorNode {
       this.state[newVariableInState] = {
         value: initialState[newVariableInState],
         //accounts for itializeModifers being called prior to initializeState. 
-        modifiers: this.state[newVariableInState] ? this.state[newVariableInState].modifiers : null
+        modifiers: this.state[newVariableInState] ? this.state[newVariableInState].modifiers : {}
       }
     });
   }
