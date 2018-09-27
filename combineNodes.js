@@ -128,7 +128,7 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-  applyToSilo(node => {
+  applyKeySubscriberToSilo(node => {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
@@ -141,7 +141,7 @@ function combineNodes(...args) {
   return silo;
 }
 
-function applyToSilo(callback) {
+function applyKeySubscriberToSilo(callback) {
   // accessing the single root in the silo
   Object.keys(silo).forEach(siloNodeRootKey => {
     inner(silo[siloNodeRootKey], callback);
@@ -194,7 +194,7 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
   let foundNode;
   let subscribedAtIndex;
 
-  applyToSilo(node => {
+  applyKeySubscriberToSilo(node => {
     if(node.name === name){
       subscribedAtIndex = node.pushToSubscribers(renderFunction)
       foundNode = node
