@@ -129,10 +129,11 @@ function combineNodes(...args) {
   });
   
   applyKeySubscriberToSilo(node => {
-    if(node.type === 'OBJECT' || node.type === "ARRAY"){
+    // apply keySubscribe only to object and array silo nodes
+    if (node.type === 'OBJECT' || node.type === "ARRAY") {
       node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
-        node.value[name]._subscribers.push(renderFunc);
+        node.value[name].subscribers.push(renderFunc);
         node.value[name].notifySubscribers();
       }
     }
@@ -141,21 +142,22 @@ function combineNodes(...args) {
   return silo;
 }
 
-function applyKeySubscriberToSilo(callback) {
+function applyKeySubscriberToSilo(addKeySubscriberFunc) {
   // accessing the single root in the silo
   Object.keys(silo).forEach(siloNodeRootKey => {
-    inner(silo[siloNodeRootKey], callback);
+    inner(silo[siloNodeRootKey], addKeySubscriberFunc);
   })
 
-  function inner (head, callback) {
-    if(head.constructor.name === 'SiloNode'){
-      callback(head);
+  // recursively navigate to every siloNode
+  function inner(head, addKeySubscriberFunc) {
+    if (head.constructor.name === 'SiloNode') {
+      addKeySubscriberFunc(head);
       if (head.type === types.PRIMITIVE) return; // recursive base case
       
       else {
         Object.keys(head.value).forEach(key => {
-          if(head.value[key].constructor.name === 'SiloNode'){
-            inner(head.value[key], callback);
+          if (head.value[key].constructor.name === 'SiloNode') {
+            inner(head.value[key], addKeySubscriberFunc);
           }
         })
       }
@@ -181,13 +183,13 @@ function applyKeySubscriberToSilo(callback) {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
-silo.subscribe = (renderFunction, name) => { //renderFunction
+silo.subscribe = (renderFunction, name) => {
 
-  if(!name){
-    if(!!renderFunction.prototype){
+  if (!name) {
+    if (!!renderFunction.prototype) {
       name = renderFunction.prototype.constructor.name + 'State';
     } else {
-      throw new Error('You can\'t use an anonymous function in subscribe without a name argument.'); //use new
+      throw new Error('You can\'t use an anonymous function in subscribe without a name argument.');
     }
   }
 
@@ -195,13 +197,13 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
   let subscribedAtIndex;
 
   applyKeySubscriberToSilo(node => {
-    if(node.name === name){
-      subscribedAtIndex = node.pushToSubscribers(renderFunction)
-      foundNode = node
+    if (node.name === name) {
+      subscribedAtIndex = node.pushToSubscribers(renderFunction);
+      foundNode = node;
     }
   })
 
-  function unsubscribe () {
+  function unsubscribe() {
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
 
