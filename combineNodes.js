@@ -132,8 +132,9 @@ function combineNodes(...args) {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
-        node.value[name]._subscribers.push(renderFunc);
+        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
         node.value[name].notifySubscribers();
+        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
       }
     }
   });
@@ -203,6 +204,12 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
 
   function unsubscribe () {
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
+  }
+
+  if(!!foundNode){
+    renderFunction(foundNode.getState())
+  } else {
+    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }
 
   return unsubscribe;
