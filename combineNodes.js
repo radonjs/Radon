@@ -132,8 +132,9 @@ function combineNodes(...args) {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
-        node.value[name]._subscribers.push(renderFunc);
+        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
         node.value[name].notifySubscribers();
+        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
       }
     }
   });
