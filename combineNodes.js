@@ -148,12 +148,17 @@ function applyToSilo(callback) {
   })
 
   function inner (head, callback) {
-    callback(head);
-    if (typeof head.value !== 'object') return; // recursive base case
-    else {
-      Object.keys(head.value).forEach(key => {
-        inner(head.value[key], callback);
-      })
+    if(head.constructor.name === 'SiloNode'){
+      callback(head);
+      if (head.type === types.PRIMITIVE) return; // recursive base case
+      
+      else {
+        Object.keys(head.value).forEach(key => {
+          if(head.value[key].constructor.name === 'SiloNode'){
+            inner(head.value[key], callback);
+          }
+        })
+      }
     }
   }
 }
@@ -176,54 +181,28 @@ function applyToSilo(callback) {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
-silo.subscribe = (component, name) => { //renderFunction
-  if(!name && !component.prototype){ //reformat to remove this if
-      throw new Error('you cant use an anonymous function in subscribe without a name argument'); //use new
-  } else if (!name && !!component.prototype){
-      name = component.prototype.constructor.name + 'State'
-  }
-  
-  const searchSilo = (head /*currSiloNode*/, name) => {
-      let children;
-      if (typeof head.value !== 'object') return null; //Use SiloNode Type System
-      else children = head.value;
+silo.subscribe = (renderFunction, name) => { //renderFunction
 
-      for (let i in children){ //air bnb rules plz
-          if (i === name){
-              return children[i]
-          } else {
-              let foundNode = searchSilo(children[i], name);
-              if (!!foundNode){return foundNode};
-          }
-      }
+  if(!name){
+    if(!!renderFunction.prototype){
+      name = renderFunction.prototype.constructor.name + 'State';
+    } else {
+      throw new Error('You can\'t use an anonymous function in subscribe without a name argument.'); //use new
+    }
   }
 
   let foundNode;
   let subscribedAtIndex;
-  for (let i in silo) { //air bnb plz
-    if (silo[i].constructor === SiloNode){
-      if (i === name) {
-        foundNode = silo[i];
-      } else {
-        foundNode = searchSilo(silo[i], name)
-      }
-      if (!!foundNode){
-        foundNode.subscribers.push(component)
-        if (typeof foundNode.value === 'object'){
-          for (let i in foundNode.value){
-            if (i.slice(-5) !== 'State'){
-              subscribedAtIndex = foundNode.value[i].subscribers.push(component);
-            }
-          }
-        }
-      }
+
+  applyToSilo(node => {
+    if(node.name === name){
+      subscribedAtIndex = node.pushToSubscribers(renderFunction)
+      foundNode = node
     }
-  }
-  
-  if (foundNode) component(foundNode.getState());
+  })
 
   function unsubscribe () {
-    foundNode._subscribers.splice(subscribedAtIndex, 1);
+    foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
 
   return unsubscribe;
