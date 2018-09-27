@@ -128,7 +128,7 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-  applyKeySubscriberToSilo(node => {
+  forEachSiloNode(node => {
     // apply keySubscribe only to object and array silo nodes
     if (node.type === 'OBJECT' || node.type === "ARRAY") {
       node.modifiers.keySubscribe = (key, renderFunc) => {
@@ -142,22 +142,23 @@ function combineNodes(...args) {
   return silo;
 }
 
-function applyKeySubscriberToSilo(addKeySubscriberFunc) {
+// callbacks have to accept a SILONODE
+function forEachSiloNode(callback) {
   // accessing the single root in the silo
   Object.keys(silo).forEach(siloNodeRootKey => {
-    inner(silo[siloNodeRootKey], addKeySubscriberFunc);
+    inner(silo[siloNodeRootKey], callback);
   })
 
   // recursively navigate to every siloNode
-  function inner(head, addKeySubscriberFunc) {
+  function inner(head, callback) {
     if (head.constructor.name === 'SiloNode') {
-      addKeySubscriberFunc(head);
+      callback(head);
       if (head.type === types.PRIMITIVE) return; // recursive base case
       
       else {
         Object.keys(head.value).forEach(key => {
           if (head.value[key].constructor.name === 'SiloNode') {
-            inner(head.value[key], addKeySubscriberFunc);
+            inner(head.value[key], callback);
           }
         })
       }
@@ -196,13 +197,17 @@ silo.subscribe = (renderFunction, name) => {
   let foundNode;
   let subscribedAtIndex;
 
-  applyKeySubscriberToSilo(node => {
+  forEachSiloNode(node => {
     if (node.name === name) {
+      // change to node.subscribers.push(renderFunction);
+      // renderFunction 'this' is bound to a React component
       subscribedAtIndex = node.pushToSubscribers(renderFunction);
       foundNode = node;
     }
   })
 
+  // call renderFunction(foundNode.getState())
+  
   function unsubscribe() {
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
