@@ -2,58 +2,10 @@
 const ConstructorNode = require('./constructorNode.js');
 const SiloNode = require('./siloNode.js');
 const types = require('./constants.js');
-const virtualNode = require('./virtualNode.js')
-// import state class for instanceof check
-// import ConstructorNode from './constructorNode.js';
-// import SiloNode from './siloNode.js';
-// import * as types from './constants.js'
+const VirtualNode = require('./virtualNode.js')
 
-// ==================> SILO TESTING <=================== \\
 
-// const AppState = new ConstructorNode('AppState');
 
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25
-// })
-
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   }
-// });
-
-// const NavState = new ConstructorNode('NavState', 'AppState');
-
-// NavState.initializeState({
-//   name: 'Han',
-//   cart: {one: 1, array: [1,2,3, {test: 'test'}]}
-//   // cart: [{two: 2, three: [1,2,3]}, 5, 10]
-// })
-
-// NavState.initializeModifiers({
-//   cart: {
-//     updateCartItem: (current, index, payload) => {
-//       return ++current;
-//     },
-//     addItem: (current, payload) => {
-//       current.newThing = 'A new thing';
-//       // current.push(payload);
-//       return current;
-//     }
-//   }
-// });
-
-// const ButtState = new ConstructorNode('ButtState');
-// ButtState.parent = 'NavState';
-
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
-
-//==================> SILO TESTING ENDED <===================\\
 
 const silo = {};
 const virtualSilo = {};
@@ -129,60 +81,66 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-  function identify () {
-    //each node's ID is a snake_case string that represents a 
-    //route to that node from the top of the silo by name
-    applyToSilo(node => {
-      node.issueID()
-    });
-  }
+  // function identify () {
+  //   //each node's ID is a snake_case string that represents a 
+  //   //route to that node from the top of the silo by name
+  //   applyToSilo(node => {
+  //     node.issueID()
+  //   });
+  // }
 
-  identify();
+  // identify();
 
-  function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
-    applyToSilo(node => {
-      if(!virtualSilo[node.id]){
-        const vNode = new VirtualNode;
-        vNode.name = node.name;
+  // function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
+  //   applyToSilo(node => {
+  //     if(!virtualSilo[node.id]){
+  //       const vNode = new VirtualNode;
+  //       vNode.name = node.name;
   
-        //each node is indexed in the virtualSilo at its ID
-        virtualSilo[node.id] = vNode;
-        vNode.type = node.type;
-        if(!!node.modifiers){
-          Object.keys(node.modifiers).forEach(key => {
-            vNode[key] = node.modifiers[key];
-          })
-        }
-        if(node.type !== 'PRIMITIVE'){
-          //value should be an object, because you have children, and you need somewhere to recieve them!
-          vNode.value = {}
-        }
-        //each node points to its parent in the virtual silo
-        if(node.parent === null) console.log('found null parent node!');
-        else {
-          vNode.parent = virtualSilo[node.parent.id]
-          if(node.type !== 'CONTAINER'){
-            vNode.parent.value[vNode.name] = vNode;
-          }
-        }
-        //each node has the id of its corresponding silo node
-        vNode.id = node.id;
-      }
-    })
-  }
+  //       //each node is indexed in the virtualSilo at its ID
+  //       virtualSilo[node.id] = vNode;
+  //       vNode.type = node.type;
+  //       if(!!node.modifiers){
+  //         Object.keys(node.modifiers).forEach(key => {
+  //           vNode[key] = node.modifiers[key];
+  //         })
+  //       }
+  //       if(node.type !== 'PRIMITIVE'){
+  //         //value should be an object, because you have children, and you need somewhere to recieve them!
+  //         vNode.value = {}
+  //       }
+  //       //each node points to its parent in the virtual silo
+  //       if(node.parent === null) console.log('found null parent node!');
+  //       else {
+  //         vNode.parent = virtualSilo[node.parent.id]
+  //         if(node.type !== 'CONTAINER'){
+  //           vNode.parent.value[vNode.name] = vNode;
+  //         }
+  //       }
+  //       //each node has the id of its corresponding silo node
+  //       vNode.id = node.id;
+  //     }
+  //   })
+  // }
   
-  virtualize();
+  // virtualize();
 
-  applyToSilo(node => { //adding keySubscribe
-    if(node.type === 'OBJECT' || node.type === "ARRAY"){
-      node.modifiers.keySubscribe = (key, renderFunc) => {
-        const name = node.name + "_" + key;
-        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-        node.value[name].notifySubscribers();
-        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
-      }
-    }
-  });
+  //DEBUGGING CODE RMBL -v-
+  applyToSilo(node => {
+    if(node.type === 'ARRAY') console.log(node);
+  })
+  //DEBUGGING CODE RMBL -^-
+
+  // applyToSilo(node => { //adding keySubscribe
+  //   if(node.type === 'OBJECT' || node.type === "ARRAY"){
+  //     node.modifiers.keySubscribe = (key, renderFunc) => {
+  //       const name = node.name + "_" + key;
+  //       const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
+  //       node.value[name].notifySubscribers();
+  //       return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+  //     }
+  //   }
+  // });
 
   return silo;
 }
@@ -209,23 +167,7 @@ function applyToSilo(callback) {
   }
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
-// // combineNodes(AppState, NavState); // testing purposes
 
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
-
-
-// ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
-
-// console.log(silo.AppState.value.cart.value.cart_one.value);
-// silo.AppState.value.cart.modifiers.increment('cart_one');
-// setTimeout(() => {
-//   console.log(silo.AppState.value.cart.value.cart_one.value);
-// }, 1000);
-
-// ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
 silo.subscribe = (renderFunction, name) => { //renderFunction
 
