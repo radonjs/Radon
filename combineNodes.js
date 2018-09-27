@@ -2,7 +2,7 @@
 const ConstructorNode = require('./constructorNode.js');
 const SiloNode = require('./siloNode.js');
 const types = require('./constants.js');
-
+const virtualNode = require('./virtualNode.js')
 // import state class for instanceof check
 // import ConstructorNode from './constructorNode.js';
 // import SiloNode from './siloNode.js';
@@ -56,6 +56,7 @@ const types = require('./constants.js');
 //==================> SILO TESTING ENDED <===================\\
 
 const silo = {};
+const virtualSilo = {};
 
 function combineNodes(...args) {
   if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
@@ -128,6 +129,51 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
+  function identify () {
+    //each node's ID is a snake_case string that represents a 
+    //route to that node from the top of the silo by name
+    applyToSilo(node => {
+      node.issueID()
+    });
+  }
+  identify();
+
+   function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
+    console.log('Virtualizing!');
+     applyToSilo(node => {
+      if(!virtualSilo[node.id]){
+        const vNode = new VirtualNode;
+        vNode.name = node.name;
+
+        //each node is indexed in the virtualSilo at its ID
+        virtualSilo[node.id] = vNode;
+        vNode.type = node.type;
+         if(!!node.modifiers){
+          Object.keys(node.modifiers).forEach(key => {
+            vNode[key] = node.modifiers[key];
+          })
+        }
+         if(node.type !== 'PRIMITIVE'){
+          //value should be an object, because you have children, and you need somewhere to recieve them!
+          vNode.value = {}
+        }
+         //each node points to its parent in the virtual silo
+        if(node.parent === null) console.log('found null parent node!');
+        else {
+          vNode.parent = virtualSilo[node.parent.id]
+          if(node.type !== 'CONTAINER'){
+            vNode.parent.value[vNode.name] = vNode;
+          }
+        }
+        
+        
+        //each node has the id of its corresponding silo node
+        vNode.id = node.id;
+      }
+    })
+  
+  virtualize();
+
   applyToSilo(node => {
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, renderFunc) => {
