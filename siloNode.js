@@ -81,6 +81,7 @@ class SiloNode {
     this._type = type;
   }
 
+  // do we need this?
   pushToSubscribers(renderFunction){
     this.subscribers.push(renderFunction);
   }
