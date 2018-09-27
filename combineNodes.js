@@ -243,17 +243,8 @@ function combineNodes(...args) {
             vNode.id = node.id;
           }
         })
-      virtualize();
-
-
-  applyToSilo(node => {
-    if(node.type === 'OBJECT' || node.type === "ARRAY"){
-      node.modifiers.keySubscribe = (key, renderFunc) => {
-        const name = node.name + "_" + key;
-        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-        node.value[name].notifySubscribers();
-        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
       }
+      virtualize();
       silo.virtualSilo = virtualSilo;
 
       return silo;
@@ -268,17 +259,16 @@ function applyToSilo(callback) {
   })
 
   function inner (head, callback) {
-    if(head.constructor.name === 'SiloNode'){
+    if(head instanceof SiloNode){
       callback(head);
-      if (head.type === types.PRIMITIVE) return; // recursive base case
-      
-      else {
-        Object.keys(head.value).forEach(key => {
-          if(head.value[key].constructor.name === 'SiloNode'){
-            inner(head.value[key], callback);
-          }
-        })
-      }
+    }
+    if (head.type === 'PRIMITIVE') return; // recursive base case
+    else {
+      Object.keys(head.value).forEach(key => {
+        if(head.value[key] instanceof SiloNode){
+          inner(head.value[key], callback);
+        }
+      })
     }
   }
 }
@@ -305,7 +295,7 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
 
   if(!name){
     if(!!renderFunction.prototype){
-      name = renderFunction.prototype.constructor.name + 'State';
+      name = renderFunction.prototype.constructor.name + 'STATE';
     } else {
       throw new Error('You can\'t use an anonymous function in subscribe without a name argument.'); //use new
     }
@@ -325,15 +315,14 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
 
-  if(!!foundNode){
-    renderFunction(foundNode.getState())
-  } else {
-    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
-  }
-
   return unsubscribe;
 }
-  
+
 // export default combineNodes;
 module.exports = combineNodes;
+
+
+
+
+
 
