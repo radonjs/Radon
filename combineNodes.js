@@ -205,6 +205,8 @@ silo.subscribe = (renderFunction, name) => { //renderFunction
     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
   }
 
+  renderFunction(foundNode.getState())
+
   return unsubscribe;
 }
 
