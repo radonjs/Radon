@@ -136,28 +136,28 @@ function combineNodes(...args) {
       node.issueID()
     });
   }
+
   identify();
 
-   function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
-    console.log('Virtualizing!');
-     applyToSilo(node => {
+  function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
+    applyToSilo(node => {
       if(!virtualSilo[node.id]){
         const vNode = new VirtualNode;
         vNode.name = node.name;
-
+  
         //each node is indexed in the virtualSilo at its ID
         virtualSilo[node.id] = vNode;
         vNode.type = node.type;
-         if(!!node.modifiers){
+        if(!!node.modifiers){
           Object.keys(node.modifiers).forEach(key => {
             vNode[key] = node.modifiers[key];
           })
         }
-         if(node.type !== 'PRIMITIVE'){
+        if(node.type !== 'PRIMITIVE'){
           //value should be an object, because you have children, and you need somewhere to recieve them!
           vNode.value = {}
         }
-         //each node points to its parent in the virtual silo
+        //each node points to its parent in the virtual silo
         if(node.parent === null) console.log('found null parent node!');
         else {
           vNode.parent = virtualSilo[node.parent.id]
@@ -165,16 +165,15 @@ function combineNodes(...args) {
             vNode.parent.value[vNode.name] = vNode;
           }
         }
-        
-        
         //each node has the id of its corresponding silo node
         vNode.id = node.id;
       }
     })
+  }
   
   virtualize();
 
-  applyToSilo(node => {
+  applyToSilo(node => { //adding keySubscribe
     if(node.type === 'OBJECT' || node.type === "ARRAY"){
       node.modifiers.keySubscribe = (key, renderFunc) => {
         const name = node.name + "_" + key;
