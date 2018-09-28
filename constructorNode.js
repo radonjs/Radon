@@ -8,6 +8,10 @@ class ConstructorNode {
     this.initializeModifiers = this.initializeModifiers.bind(this);
   }
 
+  /**
+   * Adds variables to the state
+   * @param {object} initialState - An object with keys as variable names and values of data
+   */
   initializeState(initialState) {
     // make sure that the input is an object
     if (typeof this.state !== 'object') throw new Error('Input must be an object');
@@ -21,6 +25,10 @@ class ConstructorNode {
     });
   }
 
+  /**
+   * Stores modifiers in state
+   * @param {object} initialModifiers - An object with keys associated with existing initialized variables and values that are objects containing modifiers to be bound to that specific variable
+   */
   initializeModifiers(initialModifiers) {
     // make sure that the input is an object
     if (typeof initialModifiers !== 'object') throw new Error('Input must be an object');

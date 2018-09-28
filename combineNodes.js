@@ -57,6 +57,10 @@ const types = require('./constants.js');
 
 const silo = {};
 
+/**
+ * Takes all of the constructorNodes created by the developer
+ * @param  {...ConstructorNode} args - A list of constructor Nodes
+ */
 function combineNodes(...args) {
   if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
 
@@ -143,6 +147,11 @@ function combineNodes(...args) {
   return silo;
 }
 
+/**
+ * Applies the callback to every siloNode in the silo
+ * @param {function} callback - A function that accepts a siloNode as its parameter
+ */
+
 // callbacks have to accept a SILONODE
 function forEachSiloNode(callback) {
   // accessing the single root in the silo
@@ -185,6 +194,11 @@ function forEachSiloNode(callback) {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
+/**
+ * Subscribes components to siloNodes in the silo
+ * @param  {function} renderFunction - Function to be appended to subscribers array
+ * @param {string} name - Name of the relevant component with 'State' appended
+ */
 silo.subscribe = (renderFunction, name) => {
 
   if (!name) {
