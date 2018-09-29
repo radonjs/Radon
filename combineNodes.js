@@ -57,6 +57,11 @@ const types = require('./constants.js');
 
 const silo = {};
 
+/**
+ * Takes all of the constructorNodes created by the developer
+ * @param  {...ConstructorNode} args - A list of constructor Nodes
+ */
+
 function combineNodes(...args) {
   if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
 
@@ -64,7 +69,8 @@ function combineNodes(...args) {
   // hashtable organizes all nodes into parent-child relationships
   const hashTable = {};
   args.forEach(constructorNode => {
-    if (constructorNode.parent === null) {
+    if (!constructorNode || constructorNode.constructor.name !== 'ConstructorNode') throw new Error('Only constructorNodes can be passed to combineNodes');
+    else if (constructorNode.parent === null) {
       // this is the root node, only one constructorNode can have a parent of null
       if (!hashTable.root) hashTable.root = [constructorNode];
       else throw new Error('Only one constructor node can have null parent');
@@ -143,6 +149,11 @@ function combineNodes(...args) {
   return silo;
 }
 
+/**
+ * Applies the callback to every siloNode in the silo
+ * @param {function} callback - A function that accepts a siloNode as its parameter
+ */
+
 // callbacks have to accept a SILONODE
 function forEachSiloNode(callback) {
   // accessing the single root in the silo
@@ -185,9 +196,15 @@ function forEachSiloNode(callback) {
 
 // ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
 
+/**
+ * Subscribes components to siloNodes in the silo
+ * @param  {function} renderFunction - Function to be appended to subscribers array
+ * @param {string} name - Name of the relevant component with 'State' appended
+ */
 silo.subscribe = (renderFunction, name) => {
 
-  if (!name) {
+  if (!name && !renderFunction) throw new Error('Must pass parameters');
+  else if (!name || typeof name !== 'string') {
     if (!!renderFunction.prototype) {
       name = renderFunction.prototype.constructor.name + 'State';
     } else {
@@ -214,7 +231,7 @@ silo.subscribe = (renderFunction, name) => {
   if (!!foundNode) {
     renderFunction(foundNode.getState())
   } else {
-    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
+    throw new Error('You are trying to subscribe to something that isn\'t in the silo.');
   }
 
   return unsubscribe;
