@@ -10,6 +10,8 @@ class SiloNode {
     this.subscribers = [];
     this.parent = parent; // circular silo node
     this.type = type;
+    this.id;
+    this.virtualNode;
 
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
@@ -81,6 +83,18 @@ class SiloNode {
     this._type = type;
   }
 
+  get virtualNode(){
+    return this._virtualNode
+  }
+
+  set virtualNode(virtualNode){
+    this._virtualNode = virtualNode;
+  }
+
+  get id(){
+    return this._id;
+  }
+
   pushToSubscribers(renderFunction){
     this.subscribers.push(renderFunction);
   }
@@ -94,7 +108,6 @@ class SiloNode {
   //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
   //have had issueID called on it before. use applyToSilo to make sure it runs in the right order
   issueID(){
-    this._id = 0;
     if(this.parent === null){ //its the root node
       this._id = this.name;
     } else {                  //its not the root node

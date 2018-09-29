@@ -30,20 +30,22 @@ describe('Initialize State', () => {
 
     let silo = combineNodes(PersonState, ColorState,/*BlimpState*/);
 
-    // for(let i in silo.virtualSilo){
-    //     console.log(silo.virtualSilo[i])
-    //     if(silo.virtualSilo[i].type === 'CONTAINER'){
-    //         console.log(silo.virtualSilo[i])
-    //     }
-    // };
 
-    console.log(silo.virtualSilo['ColorState.PersonState'])
+    let vSilo = silo.virtualSilo;
+    console.log(vSilo);
+
 
     test('ID\'s should represent the lineage of the node in the silo', () => {
         expect(silo['ColorState'].value['red'].value['red_2'].id).toBe('ColorState.red.red_2')
         expect(silo['ColorState'].value['blue'].value['blue_0'].id).toBe('ColorState.blue.blue_0')
         expect(silo['ColorState'].value['PersonState'].value['name'].id).toBe('ColorState.PersonState.name')
     })
+
+    test('Modifiers on silo nodes should be exposed in their virtual silo counterparts', () => {
+        expect(vSilo['ColorState.PersonState'].haveBirthday).toBe(silo['ColorState'].value['PersonState'].modifiers.haveBirthday);
+    })
+
+    
 
 
 
