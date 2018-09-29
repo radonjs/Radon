@@ -203,7 +203,8 @@ function forEachSiloNode(callback) {
  */
 silo.subscribe = (renderFunction, name) => {
 
-  if (!name) {
+  if (!name && !renderFunction) throw new Error('Must pass parameters');
+  else if (!name || typeof name !== 'string') {
     if (!!renderFunction.prototype) {
       name = renderFunction.prototype.constructor.name + 'State';
     } else {
@@ -230,7 +231,7 @@ silo.subscribe = (renderFunction, name) => {
   if (!!foundNode) {
     renderFunction(foundNode.getState())
   } else {
-    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
+    throw new Error('You are trying to subscribe to something that isn\'t in the silo.');
   }
 
   return unsubscribe;
