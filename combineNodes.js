@@ -202,97 +202,53 @@ function forEachSiloNode(callback) {
  * @param {string} name - Name of the relevant component with 'State' appended
  */
 
-silo.subscribe = (component, name) => {
-  if(!name && !component.prototype){
-      throw Error('you cant use an anonymous function in subscribe without a name argument');
-  } else if (!name && !!component.prototype){
-      name = component.prototype.constructor.name + 'State'
-  }
-  
-  const searchSilo = (head, name) => {
-      let children;
-      if(typeof head.value !== 'object') return null;
-      else children = head.value;
-
-      for(let i in children){
-          if(i === name){
-              return children[i]
-          } else {
-              let foundNode = searchSilo(children[i], name);
-              if(!!foundNode){return foundNode};
-          }
-      }
-  }
-
-  console.log('Searching for', name);
-  let foundNode;
-  for(let i in silo){
-    if(silo[i].constructor === SiloNode){
-      if(i === name) {
-        foundNode = silo[i];
-      } else {
-        foundNode = searchSilo(silo[i], name)
-      }
-      if(!!foundNode){
-        foundNode._subscribers.push(component)
-        if(typeof foundNode.value === 'object'){
-          for(let i in foundNode.value){
-            if(i.slice(-5) !== 'State'){
-              foundNode.value[i]._subscribers.push(component);
-            }
-          }
-        }
-      }
+silo.subscribe = (renderFunction, name) => {
+  if (!name) {
+    if (!!renderFunction.prototype) {
+      name = renderFunction.prototype.constructor.name + 'State';
+    } else {
+      throw new Error('You can\'t use an anonymous function in subscribe without a name argument.');
     }
   }
+
+  let foundNode;
+  let subscribedAtIndex;
+  const foundNodeChildren = [];
+
+  forEachSiloNode(node => {
+    if(node.name === name){
+      subscribedAtIndex = node.pushToSubscribers(renderFunction)
+      foundNode = node
+      foundNodeChildren.push({node: foundNode, index: subscribedAtIndex});
+    }
+  })
+
+  function unsubscribe() {
+    let ob;
+    Object.keys(foundNodeChildren).forEach(key => {
+      ob = foundNodeChildren[key]; 
+      ob.node.removeFromSubscribersAtIndex(ob.index)
+    })
+  }
   
-  if(foundNode) {
-    component(foundNode.getState());    
+  if (!!foundNode) {
+    renderFunction(foundNode.getState())
+    if (foundNode.value) {
+      Object.keys(foundNode.value).forEach(key => {
+        let node = foundNode.value[key];
+        if(node.type !== 'CONTAINER'){
+          subscribedAtIndex = node.pushToSubscribers(renderFunction);
+          foundNodeChildren.push({node: node, index: subscribedAtIndex});
+  
+        }
+      })
+    }
+  } else {
+    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }
 
-  return foundNode;
-
-    //if there's no name assume the name is component name + 'State'
-    //recursively search through silo from headnode
-    //find something with name === name;
-    //add to its subscribers the component;
+  return unsubscribe;
 }
-
-// renderFunction takes a siloNode argument
-// silo.subscribe = (renderFunction, name) => {
-
-//   if (!name) {
-//     if (!!renderFunction.prototype) {
-//       name = renderFunction.prototype.constructor.name + 'State';
-//     } else {
-//       throw new Error('You can\'t use an anonymous function in subscribe without a name argument.');
-//     }
-//   }
-
-//   let foundNode;
-//   let subscribedAtIndex;
-
-//   forEachSiloNode(node => {
-//     if (node.name === name) {
-//       // change to node.subscribers.push(renderFunction);
-//       // renderFunction 'this' is bound to a React component
-//       subscribedAtIndex = node.pushToSubscribers(renderFunction);
-//       foundNode = node;
-//     }
-//   })
-  
-//   function unsubscribe() {
-//     foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
-//   }
-
-//   if (!!foundNode) {
-//     renderFunction(foundNode.getState())
-//   } else {
-//     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
-//   }
-
-//   return unsubscribe;
-// }
 
 // export default combineNodes;
 module.exports = combineNodes;
