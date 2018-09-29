@@ -30,6 +30,7 @@ class SiloNode {
   }
 
   set name(name) {
+    if (!name || typeof name !== 'string') throw new Error('Name is required and should be a string')
     this._name = name;
   }
 
@@ -46,6 +47,7 @@ class SiloNode {
   }
 
   set modifiers(modifiers) {
+    if (typeof modifiers !== 'object' || Array.isArray(modifiers)) throw new Error('Modifiers must be a plain object');
     this._modifiers = modifiers;
   }
 
@@ -62,6 +64,7 @@ class SiloNode {
   }
 
   set parent(parent) {
+    if (parent && parent.constructor.name !== 'SiloNode') throw new Error('Parent must be null or a siloNode');
     this._parent = parent;
   }
 
@@ -78,6 +81,7 @@ class SiloNode {
   }
 
   set type(type) {
+    if (typeof type !== 'string' || !types[type]) throw new Error('Type must be an available constant');
     this._type = type;
   }
 

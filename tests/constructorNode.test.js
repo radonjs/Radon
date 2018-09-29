@@ -1,4 +1,4 @@
-let ConstructorNode = require('../constructorNode.js');
+const ConstructorNode = require('../constructorNode.js');
 
 describe('Constructor Node Class', () => {
   let testNode;
