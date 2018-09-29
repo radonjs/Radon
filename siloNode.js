@@ -264,6 +264,8 @@ class SiloNode {
   }
 
   getState() {
+    // return this._virtualNode;
+
     const state = {};
     // call getState on parent nodes up till root and collect all variables/modifiers from parents
     if (this.parent !== null) {

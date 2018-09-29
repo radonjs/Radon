@@ -15,11 +15,13 @@ describe('Initialize State', () => {
         green: ['chartreuse', 'ivy', 'teal', 'emerald']
     })
 
+    const haveBirthday = jest.fn((payload, previous) => {
+        return previous + 1;
+    })
+
     PersonState.initializeModifiers({
         age: {
-            haveBirthday: (payload, previous) => {
-                return previous + 1;
-            }
+            haveBirthday: haveBirthday
         }
     })
 
@@ -30,10 +32,7 @@ describe('Initialize State', () => {
 
     let silo = combineNodes(PersonState, ColorState,/*BlimpState*/);
 
-
     let vSilo = silo.virtualSilo;
-    console.log(vSilo);
-
 
     test('ID\'s should represent the lineage of the node in the silo', () => {
         expect(silo['ColorState'].value['red'].value['red_2'].id).toBe('ColorState.red.red_2')
@@ -42,10 +41,23 @@ describe('Initialize State', () => {
     })
 
     test('Modifiers on silo nodes should be exposed in their virtual silo counterparts', () => {
-        expect(vSilo['ColorState.PersonState'].haveBirthday).toBe(silo['ColorState'].value['PersonState'].modifiers.haveBirthday);
+        const temp = vSilo['ColorState.PersonState.age']
+
+        expect(temp.haveBirthday).toEqual(silo['ColorState'].value['PersonState'].value['age'].modifiers.haveBirthday);
+        vSilo['ColorState.PersonState.age'].haveBirthday();
+
+        expect(haveBirthday).toHaveBeenCalled();
     })
 
-    
+    test('Silo Nodes should point to their Virtual Silo Node Counterparts', () => {
+        const temp = vSilo['ColorState.PersonState.age'];
+
+        expect(temp).toEqual(silo['ColorState'].value['PersonState'].value['age'].virtualNode);
+    })
+
+    console.log(silo['ColorState'].getState())
+
+
 
 
 

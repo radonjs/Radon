@@ -100,9 +100,6 @@ function combineNodes(...args) {
 
         //each node is indexed in the virtualSilo at its ID
 
-        
-
-
         virtualSilo[node.id] = vNode;
         vNode.type = node.type;
         if(!!node.modifiers){
@@ -128,22 +125,7 @@ function combineNodes(...args) {
   
   virtualize();
 
-  // DEBUGGING CODE RMBL -v-
-  // applyToSilo(node => {
-  //   if(node.type === 'ARRAY') console.log(node);
-  // })
-  // DEBUGGING CODE RMBL -^-
-
-  // applyToSilo(node => { //adding keySubscribe
-  //   if(node.type === 'OBJECT' || node.type === "ARRAY"){
-  //     node.modifiers.keySubscribe = (key, renderFunc) => {
-  //       const name = node.name + "_" + key;
-  //       const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-  //       node.value[name].notifySubscribers();
-  //       return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
-  //     }
-  //   }
-  // });
+  
   silo.virtualSilo = virtualSilo;
   return silo;
 }
