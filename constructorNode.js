@@ -52,7 +52,7 @@ class ConstructorNode {
   }
 
   set parent(parent) {
-    if (typeof parent !== 'string') throw new Error('Parent must be a string');
+    if (typeof parent !== 'string' && parent !== null) throw new Error('Parent must be a string');
     else this._parent = parent;
   }
 

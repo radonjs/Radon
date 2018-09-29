@@ -61,6 +61,7 @@ const silo = {};
  * Takes all of the constructorNodes created by the developer
  * @param  {...ConstructorNode} args - A list of constructor Nodes
  */
+
 function combineNodes(...args) {
   if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
 
@@ -68,7 +69,8 @@ function combineNodes(...args) {
   // hashtable organizes all nodes into parent-child relationships
   const hashTable = {};
   args.forEach(constructorNode => {
-    if (constructorNode.parent === null) {
+    if (!constructorNode || constructorNode.constructor.name !== 'ConstructorNode') throw new Error('Only constructorNodes can be passed to combineNodes');
+    else if (constructorNode.parent === null) {
       // this is the root node, only one constructorNode can have a parent of null
       if (!hashTable.root) hashTable.root = [constructorNode];
       else throw new Error('Only one constructor node can have null parent');
