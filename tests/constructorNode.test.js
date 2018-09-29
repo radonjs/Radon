@@ -87,7 +87,7 @@ describe('Constructor Node Class', () => {
     })
 
     it('State from adding mods first vs vars first should be identical', () => {
-      // expect(JSON.stringify(testNode.state)).toBe(JSON.stringify(stateObj));
+      expect(JSON.stringify(testNode.state)).toBe(JSON.stringify(stateObj));
     })
   })
 })
