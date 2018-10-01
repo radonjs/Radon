@@ -1,5 +1,5 @@
 import combineNodes from './radon/combineNodes';
-import constructorNode from './radon/constructorNode';
+import ConstructorNode from './radon/constructorNode';
 
 export const combineState = combineNodes;
-export const State = constructorNode;
+export const StateNode = ConstructorNode;
