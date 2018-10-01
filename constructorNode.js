@@ -8,9 +8,13 @@ class ConstructorNode {
     this.initializeModifiers = this.initializeModifiers.bind(this);
   }
 
+  /**
+   * Adds variables to the state
+   * @param {object} initialState - An object with keys as variable names and values of data
+   */
   initializeState(initialState) {
     // make sure that the input is an object
-    if (typeof this.state !== 'object') throw new Error('Input must be an object');
+    if (typeof initialState !== 'object' || Array.isArray(initialState)) throw new Error('Input must be an object');
     // loop through the state variables
     Object.keys(initialState).forEach(newVariableInState => {
       this.state[newVariableInState] = {
@@ -21,9 +25,13 @@ class ConstructorNode {
     });
   }
 
+  /**
+   * Stores modifiers in state
+   * @param {object} initialModifiers - An object with keys associated with existing initialized variables and values that are objects containing modifiers to be bound to that specific variable
+   */
   initializeModifiers(initialModifiers) {
     // make sure that the input is an object
-    if (typeof initialModifiers !== 'object') throw new Error('Input must be an object');
+    if (typeof initialModifiers !== 'object' || Array.isArray(initialModifiers)) throw new Error('Input must be an object');
     // loop through the state modifiers
     Object.keys(initialModifiers).forEach(newModifiersInState => {
       this.state[newModifiersInState] = {
@@ -35,7 +43,8 @@ class ConstructorNode {
   }
 
   set name(name) {
-    this._name = name;
+    if (typeof name !== 'string') throw new Error('Name must be a string');
+    else this._name = name;
   }
 
   get name() {
@@ -43,7 +52,8 @@ class ConstructorNode {
   }
 
   set parent(parent) {
-    this._parent = parent;
+    if (typeof parent !== 'string' && parent !== null) throw new Error('Parent must be a string');
+    else this._parent = parent;
   }
 
   get parent() {
@@ -66,7 +76,7 @@ module.exports = ConstructorNode;
 
 // import State from _____
 
-// const AppState = new ConstructorNode('AppState', 'ParendNode');
+// const AppState = new ConstructorNode(7, 'ParendNode');
 // // AppState.name = 'AppState'; -> optional if not set in constructor
 // // AppState.parent = 'ParentNode'; -> optional if not set in constructor
 

@@ -2,10 +2,11 @@
   "name": "radon-js",
   "version": "2.0.0",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
-  "main": "stateNode.js",
+  "main": "constructorNode.js",
   "scripts": {
-    "test": "jest stateNode.test.js --watch",
-    "test:combineNodes": "jest combineNodes.test.js --watch"
+    "test": "jest siloNode.test.js",
+    "watch": "jest constructorNode.test.js --watch",
+    "test:vSilo": "jest virtualSilo.test.js --watch"
   },
   "repository": {
     "type": "git",

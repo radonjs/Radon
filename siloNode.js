@@ -30,6 +30,7 @@ class SiloNode {
   }
 
   set name(name) {
+    if (!name || typeof name !== 'string') throw new Error('Name is required and should be a string')
     this._name = name;
   }
 
@@ -46,6 +47,7 @@ class SiloNode {
   }
 
   set modifiers(modifiers) {
+    if (typeof modifiers !== 'object' || Array.isArray(modifiers)) throw new Error('Modifiers must be a plain object');
     this._modifiers = modifiers;
   }
 
@@ -62,6 +64,7 @@ class SiloNode {
   }
 
   set parent(parent) {
+    if (parent && parent.constructor.name !== 'SiloNode') throw new Error('Parent must be null or a siloNode');
     this._parent = parent;
   }
 
@@ -78,6 +81,7 @@ class SiloNode {
   }
 
   set type(type) {
+    if (typeof type !== 'string' || !types[type]) throw new Error('Type must be an available constant');
     this._type = type;
   }
 
@@ -90,6 +94,9 @@ class SiloNode {
     this.subcribers = this.subscribers.slice(index, 1);
   }
 
+  /**
+   * Tells all subscribers of a siloNode that changes to state have been made
+   */
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
     this.subscribers.forEach(func => {
@@ -98,6 +105,11 @@ class SiloNode {
     })
   }
 
+  /**
+   * Invoked once in the siloNode constructor to create a closure. The closure variable 
+   * 'running' prevents the returned async function from being invoked if it's
+   * still running from a previous call
+   */
   runModifiers() {
     let running = false; // prevents multiple calls from being made if already running
 
@@ -117,6 +129,14 @@ class SiloNode {
     return run;
   }
 
+  /**
+   * Deconstructs objects into a parent siloNode with a type of object/array, and
+   * children siloNodes with values pertaining to the contents of the object
+   * @param {string} objName - The intended key of the object when stored in the silo
+   * @param {object} objectToDeconstruct - Any object that must contain a key of value
+   * @param {SiloNode} parent - Intended SiloNode parent to the deconstructed object
+   * @param {boolean} runLinkedMods - True only when being called for a constructorNode
+   */
   deconstructObjectIntoSiloNodes(objName = this.name, objectToDeconstruct = this, parent = this.parent, runLinkedMods = false) {
     const objChildren = {};
     let type, keys;
@@ -155,6 +175,11 @@ class SiloNode {
     return newSiloNode;
   }
 
+  /**
+   * Wraps developer written modifiers in async functions with state passed in automatically
+   * @param {string} nodeName - The name of the siloNode
+   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   */
   linkModifiers(nodeName = this.name, stateModifiers = this.modifiers) {
     if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
@@ -199,6 +224,11 @@ class SiloNode {
     })
   }
 
+  /**
+   * Wraps developer written modifiers in async functions with state passed in automatically
+   * @param {string} nodeName - The name of the siloNode
+   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   */
   reconstruct(siloNodeName, currSiloNode) {
     let reconstructedObject;
     if (currSiloNode.type === types.OBJECT) reconstructedObject = this.reconstructObject(siloNodeName, currSiloNode);
@@ -207,6 +237,11 @@ class SiloNode {
     return reconstructedObject;
   }
 
+  /**
+   * Wraps developer written modifiers in async functions with state passed in automatically
+   * @param {string} nodeName - The name of the siloNode
+   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   */
   reconstructObject(siloNodeName, currSiloNode) {
     const newObject = {};
     // loop through object values currently stored as nodes
@@ -224,6 +259,11 @@ class SiloNode {
     return newObject;
   }
 
+  /**
+   * Wraps developer written modifiers in async functions with state passed in automatically
+   * @param {string} nodeName - The name of the siloNode
+   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   */
   reconstructArray(siloNodeName, currSiloNode) {
     const newArray = [];
     // loop through array indices currently stored as nodes
