@@ -91,7 +91,7 @@ function combineNodes(...args) {
   function identify () {
     //each node's ID is a snake_case string that represents a 
     //route to that node from the top of the silo by name
-    applyToSilo(node => {
+    forEachSiloNode(node => {
       node.issueID()
     });
   }
@@ -99,7 +99,7 @@ function combineNodes(...args) {
   identify();
 
   function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
-    applyToSilo(node => {
+    forEachSiloNode(node => {
       if(!virtualSilo[node.id]){
         const vNode = new VirtualNode;
         node.virtualNode = vNode;
