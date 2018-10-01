@@ -1,6 +1,10 @@
 # <img src='https://i.imgur.com/k6JIgZR.png' height='130'/>
 
-Radon is an object-oriented state management framework for JavaScript applications.
+Radon is an object-oriented state management framework for JavaScript applications. 
+
+## Why?
+
+Radon is a state manager that is built using a tree data structure to implement data encapsulation. There is a rarely an instance in the programming universe that data should available  
 
 Radon state management is able to update specific parts of the state tree without ever resending the state unnecessarily.
 It does this using state methods called Modifiers, which are attached to specific pieces of the state. State changes
