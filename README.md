@@ -1,7 +1,5 @@
 # <img src='https://i.imgur.com/k6JIgZR.png' height='130'/>
 
-
-
 Radon is an object-oriented state management framework for JavaScript applications.
 
 ## Getting Started
