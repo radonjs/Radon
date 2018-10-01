@@ -1,59 +1,7 @@
 // import state class for instanceof check
-const ConstructorNode = require('./constructorNode.js');
-const SiloNode = require('./siloNode.js');
-const types = require('./constants.js');
-
-// import state class for instanceof check
-// import ConstructorNode from './constructorNode.js';
-// import SiloNode from './siloNode.js';
-// import * as types from './constants.js'
-
-// ==================> SILO TESTING <=================== \\
-
-// const AppState = new ConstructorNode('AppState');
-
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25
-// })
-
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   }
-// });
-
-// const NavState = new ConstructorNode('NavState', 'AppState');
-
-// NavState.initializeState({
-//   name: 'Han',
-//   cart: {one: 1, array: [1,2,3, {test: 'test'}]}
-//   // cart: [{two: 2, three: [1,2,3]}, 5, 10]
-// })
-
-// NavState.initializeModifiers({
-//   cart: {
-//     updateCartItem: (current, index, payload) => {
-//       return ++current;
-//     },
-//     addItem: (current, payload) => {
-//       current.newThing = 'A new thing';
-//       // current.push(payload);
-//       return current;
-//     }
-//   }
-// });
-
-// const ButtState = new ConstructorNode('ButtState');
-// ButtState.parent = 'NavState';
-
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
-
-//==================> SILO TESTING ENDED <===================\\
+import ConstructorNode from './constructorNode.js';
+import SiloNode from './siloNode.js';
+import * as types from './constants.js'
 
 const silo = {};
 
@@ -178,33 +126,14 @@ function forEachSiloNode(callback) {
   }
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
-// // combineNodes(AppState, NavState); // testing purposes
-
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
-
-
-// ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
-
-// console.log(silo.AppState.value.cart.value.cart_one.value);
-// silo.AppState.value.cart.modifiers.increment('cart_one');
-// setTimeout(() => {
-//   console.log(silo.AppState.value.cart.value.cart_one.value);
-// }, 1000);
-
-// ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
-
 /**
  * Subscribes components to siloNodes in the silo
  * @param  {function} renderFunction - Function to be appended to subscribers array
  * @param {string} name - Name of the relevant component with 'State' appended
  */
-silo.subscribe = (renderFunction, name) => {
 
-  if (!name && !renderFunction) throw new Error('Must pass parameters');
-  else if (!name || typeof name !== 'string') {
+silo.subscribe = (renderFunction, name) => {
+  if (!name) {
     if (!!renderFunction.prototype) {
       name = renderFunction.prototype.constructor.name + 'State';
     } else {
@@ -214,28 +143,41 @@ silo.subscribe = (renderFunction, name) => {
 
   let foundNode;
   let subscribedAtIndex;
+  const foundNodeChildren = [];
 
   forEachSiloNode(node => {
-    if (node.name === name) {
-      // change to node.subscribers.push(renderFunction);
-      // renderFunction 'this' is bound to a React component
-      subscribedAtIndex = node.pushToSubscribers(renderFunction);
-      foundNode = node;
+    if(node.name === name){
+      subscribedAtIndex = node.pushToSubscribers(renderFunction)
+      foundNode = node
+      foundNodeChildren.push({node: foundNode, index: subscribedAtIndex});
     }
   })
-  
-  function unsubscribe() {
-    foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
-  }
 
+  function unsubscribe() {
+    let ob;
+    Object.keys(foundNodeChildren).forEach(key => {
+      ob = foundNodeChildren[key]; 
+      ob.node.removeFromSubscribersAtIndex(ob.index)
+    })
+  }
+  
   if (!!foundNode) {
     renderFunction(foundNode.getState())
+    if (foundNode.value) {
+      Object.keys(foundNode.value).forEach(key => {
+        let node = foundNode.value[key];
+        if(node.type !== 'CONTAINER'){
+          subscribedAtIndex = node.pushToSubscribers(renderFunction);
+          foundNodeChildren.push({node: node, index: subscribedAtIndex});
+  
+        }
+      })
+    }
   } else {
-    throw new Error('You are trying to subscribe to something that isn\'t in the silo.');
+    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }
 
   return unsubscribe;
 }
 
-// export default combineNodes;
-module.exports = combineNodes;
+export default combineNodes;
