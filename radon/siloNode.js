@@ -1,5 +1,4 @@
 import * as types from './constants.js';
-// const types = require('./constants.js');
 
 class SiloNode {
   constructor(name, value, parent = null, modifiers = {}, type = types.PRIMITIVE) {
@@ -308,4 +307,3 @@ class SiloNode {
 }
 
 export default SiloNode;
-// module.exports = SiloNode;

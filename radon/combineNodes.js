@@ -1,59 +1,7 @@
 // import state class for instanceof check
-// const ConstructorNode = require('./constructorNode.js');
-// const SiloNode = require('./siloNode.js');
-// const types = require('./constants.js');
-
-// import state class for instanceof check
 import ConstructorNode from './constructorNode.js';
 import SiloNode from './siloNode.js';
 import * as types from './constants.js'
-
-// ==================> SILO TESTING <=================== \\
-
-// const AppState = new ConstructorNode('AppState');
-
-// AppState.initializeState({
-//   name: 'Han',
-//   age: 25
-// })
-
-// AppState.initializeModifiers({
-//   age: {
-//     incrementAge: (current, payload) => {
-//       return current + payload;
-//     }
-//   }
-// });
-
-// const NavState = new ConstructorNode('NavState', 'AppState');
-
-// NavState.initializeState({
-//   name: 'Han',
-//   cart: {one: 1, array: [1,2,3, {test: 'test'}]}
-//   // cart: [{two: 2, three: [1,2,3]}, 5, 10]
-// })
-
-// NavState.initializeModifiers({
-//   cart: {
-//     updateCartItem: (current, index, payload) => {
-//       return ++current;
-//     },
-//     addItem: (current, payload) => {
-//       current.newThing = 'A new thing';
-//       // current.push(payload);
-//       return current;
-//     }
-//   }
-// });
-
-// const ButtState = new ConstructorNode('ButtState');
-// ButtState.parent = 'NavState';
-
-// ButtState.initializeState({
-//   butt: 'Butt'
-// })
-
-//==================> SILO TESTING ENDED <===================\\
 
 const silo = {};
 
@@ -178,24 +126,6 @@ function forEachSiloNode(callback) {
   }
 }
 
-// combineNodes(ButtState, NavState, AppState); // testing purposes
-// // combineNodes(AppState, NavState); // testing purposes
-
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1000);
-// setTimeout(() => {console.log('Im adding again', silo.AppState.value.NavState.getState().addItem({six: 6}))}, 1001);
-// setTimeout(() => {console.log('delay', silo.AppState.value.NavState.getState())}, 1010);
-
-
-// ==========> TESTS that calling a parent function will modify its child for nested objects <========== \\
-
-// console.log(silo.AppState.value.cart.value.cart_one.value);
-// silo.AppState.value.cart.modifiers.increment('cart_one');
-// setTimeout(() => {
-//   console.log(silo.AppState.value.cart.value.cart_one.value);
-// }, 1000);
-
-// ==========> END TESTS that calling a parent function will modify its child for nested objects <========== \\
-
 /**
  * Subscribes components to siloNodes in the silo
  * @param  {function} renderFunction - Function to be appended to subscribers array
@@ -251,4 +181,3 @@ silo.subscribe = (renderFunction, name) => {
 }
 
 export default combineNodes;
-// module.exports = combineNodes;
