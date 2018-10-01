@@ -2,24 +2,40 @@
   "name": "radon-js",
   "version": "2.0.0",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
-  "main": "constructorNode.js",
+  "main": "index.js",
   "scripts": {
-    "test": "jest siloNode.test.js",
+    "test": "jest",
+    "test:siloNode": "jest siloNode.test.js",
     "watch": "jest constructorNode.test.js --watch",
-    "test:vSilo": "jest virtualSilo.test.js --watch"
+    "test:vSilo": "jest virtualSilo.test.js --watch",
+    "build": "./node_modules/.bin/rollup -c"
   },
+  "keywords": [
+    "npm",
+    "state",
+    "management",
+    "oop",
+    "object",
+    "oriented"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Joshua-Wright76/Radon.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Hannah Mitchell, Hayden Fithyan, Joshua Wright, Nicholas Smith",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Joshua-Wright76/Radon/issues"
   },
   "homepage": "https://github.com/Joshua-Wright76/Radon#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "jest": "^23.6.0",
-    "jest-cli": "^23.6.0"
+    "jest-cli": "^23.6.0",
+    "rollup": "^0.66.2",
+    "rollup-plugin-babel": "^4.0.3"
   }
 }

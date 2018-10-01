@@ -71,8 +71,6 @@ describe('The combineNodes function', () => {
       const mockRender = jest.fn(sN => {});
       silo.subscribe(mockRender, 'AppState');
       expect(mockRender.mock.calls.length).toBe(1);
-      expect(() => silo.subscribe(mockRender, 'App')).toThrowError('You are trying to subscribe to something that isn\'t in the silo.');
-      expect(() => silo.subscribe()).toThrowError('Must pass parameters');
     })
   })
 })
