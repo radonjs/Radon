@@ -131,6 +131,7 @@ class SiloNode {
         running = true;
         while (this.queue.length > 0) {
           this.value = await this.queue.shift()();
+          this.virtualNode.updateTo(this.value);
           if (this.type !== types.PRIMITIVE) this.value = this.deconstructObjectIntoSiloNodes().value;
           this.notifySubscribers();
         }
@@ -263,13 +264,16 @@ class SiloNode {
     return newArray;
   }
 
-  getState() {
-    // return this._virtualNode;
+  getState(){
+    return this._virtualNode;
+  }
+
+  unsheatheChildren() {
 
     const state = {};
     // call getState on parent nodes up till root and collect all variables/modifiers from parents
     if (this.parent !== null) {
-      const parentState = this.parent.getState();
+      const parentState = this.parent.unsheatheChildren();
       Object.keys(parentState).forEach(key => {
         state[key] = parentState[key];
       })

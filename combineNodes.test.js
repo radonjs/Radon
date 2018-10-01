@@ -15,7 +15,8 @@ describe('Initialize State', () => {
         green: ['chartreuse', 'ivy', 'teal', 'emerald']
     })
 
-    const haveBirthday = jest.fn((payload, previous) => {
+    const haveBirthday = jest.fn((previous, payload) => {
+        console.log('some shit', previous + 1);
         return previous + 1;
     })
 
@@ -25,12 +26,12 @@ describe('Initialize State', () => {
         }
     })
 
-    // const BlimpState = new ConstructorNode('HelenState', 'ColorState')
+    // const BlimpState = new ConstructorNode('BlimpState', 'ColorState')
     // BlimpState.initializeState({
     //     take:{a:{ride:{in:{my:{blimp: 'its a', very:{strong:'blimp'}}}}}}
     // })
 
-    let silo = combineNodes(PersonState, ColorState,/*BlimpState*/);
+    let silo = combineNodes(PersonState, ColorState);
 
     let vSilo = silo.virtualSilo;
 
@@ -41,21 +42,35 @@ describe('Initialize State', () => {
     })
 
     test('Modifiers on silo nodes should be exposed in their virtual silo counterparts', () => {
-        const temp = vSilo['ColorState.PersonState.age']
+        const temp = vSilo['ColorState.PersonState']
 
         expect(temp.haveBirthday).toEqual(silo['ColorState'].value['PersonState'].value['age'].modifiers.haveBirthday);
-        vSilo['ColorState.PersonState.age'].haveBirthday();
-
+        vSilo['ColorState.PersonState'].haveBirthday();
+        
         expect(haveBirthday).toHaveBeenCalled();
     })
+    
+    test('Silo Nodes should have an update function which changes the data in their container node', () => {
+        const temp = vSilo['ColorState.PersonState.name.name_0'];
+        temp.updateTo('Mike');
 
-    test('Silo Nodes should point to their Virtual Silo Node Counterparts', () => {
-        const temp = vSilo['ColorState.PersonState.age'];
-
-        expect(temp).toEqual(silo['ColorState'].value['PersonState'].value['age'].virtualNode);
+        expect(vSilo['ColorState.PersonState']['name'][0]).toEqual('Mike');
     })
 
-    console.log(silo['ColorState'].getState())
+
+    test('Silo Node modifiers should update their virtual silo counterparts', () => {
+        const temp = vSilo['ColorState.PersonState'];
+
+        const valueBefore = temp['age'];
+
+        temp.haveBirthday();
+
+        const valueAfter = temp['age'];
+
+
+        expect(valueAfter).toBe(valueBefore+1)
+    })
+
 
 
 
