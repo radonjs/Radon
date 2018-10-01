@@ -1,11 +1,8 @@
 // import state class for instanceof check
-const ConstructorNode = require('./constructorNode.js');
-const SiloNode = require('./siloNode.js');
-const types = require('./constants.js');
-const VirtualNode = require('./virtualNode.js')
-
-
-
+import ConstructorNode from './constructorNode.js';
+import SiloNode from './siloNode.js';
+import * as types from './constants.js'
+import virtualNode from './virtualNode.js'
 
 const silo = {};
 const virtualSilo = {};
@@ -203,17 +200,14 @@ function forEachSiloNode(callback) {
   }
 }
 
-
-
 /**
  * Subscribes components to siloNodes in the silo
  * @param  {function} renderFunction - Function to be appended to subscribers array
  * @param {string} name - Name of the relevant component with 'State' appended
  */
-silo.subscribe = (renderFunction, name) => {
 
-  if (!name && !renderFunction) throw new Error('Must pass parameters');
-  else if (!name || typeof name !== 'string') {
+silo.subscribe = (renderFunction, name) => {
+  if (!name) {
     if (!!renderFunction.prototype) {
       name = renderFunction.prototype.constructor.name + 'State';
     } else {
@@ -223,28 +217,41 @@ silo.subscribe = (renderFunction, name) => {
 
   let foundNode;
   let subscribedAtIndex;
+  const foundNodeChildren = [];
 
   forEachSiloNode(node => {
-    if (node.name === name) {
-      // change to node.subscribers.push(renderFunction);
-      // renderFunction 'this' is bound to a React component
-      subscribedAtIndex = node.pushToSubscribers(renderFunction);
-      foundNode = node;
+    if(node.name === name){
+      subscribedAtIndex = node.pushToSubscribers(renderFunction)
+      foundNode = node
+      foundNodeChildren.push({node: foundNode, index: subscribedAtIndex});
     }
   })
-  
-  function unsubscribe() {
-    foundNode.removeFromSubscribersAtIndex(subscribedAtIndex);
-  }
 
+  function unsubscribe() {
+    let ob;
+    Object.keys(foundNodeChildren).forEach(key => {
+      ob = foundNodeChildren[key]; 
+      ob.node.removeFromSubscribersAtIndex(ob.index)
+    })
+  }
+  
   if (!!foundNode) {
     renderFunction(foundNode.getState())
+    if (foundNode.value) {
+      Object.keys(foundNode.value).forEach(key => {
+        let node = foundNode.value[key];
+        if(node.type !== 'CONTAINER'){
+          subscribedAtIndex = node.pushToSubscribers(renderFunction);
+          foundNodeChildren.push({node: node, index: subscribedAtIndex});
+  
+        }
+      })
+    }
   } else {
-    throw new Error('You are trying to subscribe to something that isn\'t in the silo.');
+    console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }
 
   return unsubscribe;
 }
 
-// export default combineNodes;
-module.exports = combineNodes;
+export default combineNodes;
