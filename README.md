@@ -72,7 +72,7 @@ AppState.initializeModifiers({
       return payload;
     }
   }
-  status: () => {
+  status: {
     toggleStatus: (current) => {
       return !current;
     }
@@ -131,7 +131,7 @@ To change the value of index 2 of the 'married' array, the specified 'address' w
 
 /*
 Once all StateNodes have been declared, they should be combined in the function combineStateNodes. The returned object is known as the silo.
-/*
+*/
 
 import AppState from './appState';
 import NarbarState from './navbarState';
