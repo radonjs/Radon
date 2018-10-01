@@ -31,7 +31,7 @@ Unlike Radon, React doesn't provide UMD builds, so you will need to use a Common
 
 ## How Radon Works
 
-```
+```javascript
 import { StateNode } from 'radon-js'
 
 /* 
