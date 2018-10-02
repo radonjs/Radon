@@ -16,11 +16,13 @@ class ConstructorNode {
   initializeState(initialState) {
     // make sure that the input is an object
     if (typeof initialState !== 'object' || Array.isArray(initialState)) throw new Error('Input must be an object');
-    // loop through the state variables
+    // loop through the state variables and create objects that hold the variable and any
+    // associated modifiers
     Object.keys(initialState).forEach(newVariableInState => {
       this.state[newVariableInState] = {
         value: initialState[newVariableInState],
-        //accounts for itializeModifers being called prior to initializeState. 
+        // accounts for initializeModifers being called prior to initializeState
+        // by checking to see if this object has already been created
         modifiers: this.state[newVariableInState] ? this.state[newVariableInState].modifiers : {}
       }
     });
@@ -34,10 +36,12 @@ class ConstructorNode {
   initializeModifiers(initialModifiers) {
     // make sure that the input is an object
     if (typeof initialModifiers !== 'object' || Array.isArray(initialModifiers)) throw new Error('Input must be an object');
-    // loop through the state modifiers
+    // loops through the state modifiers. The same object is created here as in initializeState and it
+    // will overwrite the initializeState object. But it needs to be done this way in case the dev calls 
+    // initializeModifiers before they call initializeState. Now it works either way 
     Object.keys(initialModifiers).forEach(newModifiersInState => {
       this.state[newModifiersInState] = {
-        //accounts for initializeState being called prior to initializeState. 
+        // accounts for initializeState being called prior to initializeModifiers. 
         value: this.state[newModifiersInState] ? this.state[newModifiersInState].value : null,
         modifiers: initialModifiers[newModifiersInState]
       }
