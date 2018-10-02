@@ -64,57 +64,68 @@ as an argument. The variable names and their data should be listed in the object
 */
 
 AppState.initializeState({
- name: 'Radon',
- status: true,
- arrayOfNames: []
+  name: 'Radon',
+  status: true,
+  arrayOfNames: []
 })
 
 /*
-Modifiers are functions that modify a single variable in state. Modifiers are attached to variables by calling the method initializeModifiers which also takes an object as an argument. The keys of the
+Modifiers are functions that modify a single variable in state. Modifiers are attached to variables by
+calling the method initializeModifiers which also takes an object as an argument. The keys of the
 argument object must correspond to variables that have already been declared in AppState. The values
 are objects that contain the modifier functions as key-value pairs. There are two types of modifiers
 in Radon. The first type, as seen below, can accept either 1 or 2 arguments. The 'current' argument
-will automatically be injected with the bound state variable. The 'payload' argument is any data that can be used to modify or replace the 'current' value of state. Even if the current value of state is not used in the modifier, it will still be passed in automatically.
+will automatically be injected with the bound state variable. The 'payload' argument is any data that can be
+used to modify or replace the 'current' value of state. Even if the current value of state is not used in
+the modifier, it will still be passed in automatically.
 */
 
 AppState.initializeModifiers({
- name: {
-   updateName: (current, payload) => {
-     return payload;
-   }
- }
- status: {
-   toggleStatus: (current) => {
-     return !current;
-   }
- }
+  name: {
+    updateName: (current, payload) => {
+      return payload;
+    }
+  },
+  status: {
+    toggleStatus: (current) => {
+      return !current;
+    }
+  }
 })
 
 /*
-It is important to note that when these modifiers are called from a component, only the payload argument must be passed into the function as Radon will fill the 'current' parameter by default.
+It is important to note that when these modifiers are called from a component, only the payload argument
+must be passed into the function as Radon will fill the 'current' parameter by default.
 */
 
 <button onClick={() => this.props.updateName('Radon is cool!!!')}>Click Me</button>
 <button onClick={() => this.props.toggleStatus()}>Click Me Too</button>
 
 /*
-The second modifier type is what helps Radon eliminate unnecessary re-rendering of frontend components. This modifier type accepts three arguments and is used exclusively with objects. *Note that initializeModifiers should only be called once. It is shown again here for demonstration purposes only*.
+The second modifier type is what helps Radon eliminate unnecessary re-rendering of frontend components. This
+modifier type accepts three arguments and is used exclusively with objects. *Note that initializeModifiers
+should only be called once. It is shown again here for demonstration purposes only*.
 */
 
 AppState.initializeModifiers({
- arrayOfNames: {
-   addNameToArray: (current, payload) => {
-     current.push(payload);
-     return current;
-   }
-   updateAName: (current, index, payload) => {
-     return payload;
-   }
- }
+  arrayOfNames: {
+    addNameToArray: (current, payload) => {
+      current.push(payload);
+      return current;
+    },
+    updateAName: (current, index, payload) => {
+      return payload;
+    }
+  }
 })
 
 /*
-The modifier addNumberToArray is nothing new. Since the goal of the modifier is to edit the array as a whole, the entire array object is passed into the 'current' parameter. A modifier that edits the array will cause a rerender of any component that subscribes to the array. However, we may have circumstances in which we only want to edit a single index within an array. In this case we create a modifier that accepts an index. The 'current' value will always reflect arrayOfNumbers[index]. This will prevent a re-render of components listening to the entire array, and will instead only re-render components listening to the specified index.
+The modifier addNumberToArray is nothing new. Since the goal of the modifier is to edit the array as a whole,
+the entire array object is passed into the 'current' parameter. A modifier that edits the array will cause a
+rerender of any component that subscribes to the array. However, we may have circumstances in which we only
+want to edit a single index within an array. In this case we create a modifier that accepts an index. The
+'current' value will always reflect arrayOfNumbers[index]. This will prevent a re-render of components
+listening to the entire array, and will instead only re-render components listening to the specified index.
 
 Again, it is important to note that the 'current' parameter will be injected with state automatically.
 */
@@ -122,17 +133,20 @@ Again, it is important to note that the 'current' parameter will be injected wit
 <button onClick={() => updateAName(0, 'Hannah')}>Edit an Index!</button>
 
 /*
-The same logic applies to plain objects. Instead of passing a numerical index into a modifier, the key of a key-value pair can be passed in instead.
+The same logic applies to plain objects. Instead of passing a numerical index into a modifier, the key of a
+key-value pair can be passed in instead.
 
-Objects can be nested and it is possible to create modifiers for deeply nested objects. Ultimately, the modifier will always be bound to the parent object. However, the key/index parameter will transform into a longer chain of 'addresses' to tell Radon exactly where the data is stored. For example:
+Objects can be nested and it is possible to create modifiers for deeply nested objects. Ultimately, the
+modifier will always be bound to the parent object. However, the key/index parameter will transform into a
+longer chain of 'addresses' to tell Radon exactly where the data is stored. For example:
 */
 
 names: {
- first: ['', 'Beth', 'Lisa'],
- last: {
-   birth: ['Mitchell', 'Sanchez', 'Delaney'],
-   married: ['Mitchell', 'Smith', 'Delaney']
- }
+  first: ['', 'Beth', 'Lisa'],
+  last: {
+    birth: ['Mitchell', 'Sanchez', 'Delaney'],
+    married: ['Mitchell', 'Smith', 'Delaney']
+  }
 }
 
 /*
@@ -141,7 +155,8 @@ To change the value of index 2 of the 'married' array, the specified 'address' w
 */
 
 /*
-Once all StateNodes have been declared, they should be combined in the function combineStateNodes. The returned object is known as the silo.
+Once all StateNodes have been declared, they should be combined in the function combineStateNodes. The
+returned object is known as the silo.
 */
 
 import AppState from './appState';
@@ -163,8 +178,11 @@ Babel - ES2015 transpiling
 
 ## Authors
 Hannah Mitchell,
+
 Hayden Fithyan,
+
 Joshua Wright,
+
 Nicholas Smith,
 
 ## License
