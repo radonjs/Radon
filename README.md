@@ -103,7 +103,8 @@ must be passed into the function as Radon will fill the 'current' parameter by d
 
 /*
 The second modifier type is what helps Radon eliminate unnecessary re-rendering of frontend components.
-This modifier type accepts three arguments and is used exclusively with objects. *Note that initializeModifiers should only be called once. It is shown again here for demonstration purposes only*.
+This modifier type accepts three arguments and is used exclusively with objects. *Note that
+initializeModifiers should only be called once. It is shown again here for demonstration purposes only*.
 */
 
 AppState.initializeModifiers({
