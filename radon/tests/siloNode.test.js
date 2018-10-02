@@ -1,9 +1,9 @@
-const SiloNode = require('../siloNode.js');
-const ConstructorNode = require('../constructorNode.js');
-const combineNodes = require('../combineNodes.js');
+import SiloNode from '../siloNode.js';
+import ConstructorNode from '../constructorNode.js';
+import combineNodes from '../combineNodes.js';
 
 describe('SiloNode', () => {
-  let silo;
+  let AppState, NavState, silo;
   const cart = {one: 1, array: [1,2,3, {test: 'test'}]};
   const mockAddItem = jest.fn((current, payload) => {
     Object.keys(payload).forEach(key => {
