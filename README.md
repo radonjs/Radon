@@ -42,10 +42,16 @@ import { StateNode } from 'radon-js'
 /*
 StateNode is a class needed for creating instances of state. In Radon, StateNodes are created in
 tandem with frontend components. The naming convention is important here; if you have created
-a frontend component called App with the intent of statefulness, then an instance of StateNode must be declared and labeled as AppState. This will allow the App component to properly bind to AppState
+a frontend component called App with the intent of statefulness, then an instance of StateNode must be 
+declared and labeled as AppState. This will allow the App component to properly bind to AppState
 at compile time.
 
-The new instance of StateNode takes two arguments: the first argument is the name of the StateNode you are creating which must follow our naming convention. The second argument is the name of the parent node. One StateNode must be considered the root of the state tree. Therefore, at only one occasion can the parent argument be omitted. This instance of StateNode will be considered the root. Every other StateNode must take a parent argument.
+
+The new instance of StateNode takes two arguments: the first argument is the name of the StateNode you
+are creating which must follow our naming convention. The second argument is the name of the parent
+node. One StateNode must be considered the root of the state tree. Therefore, at only one occasion can
+the parent argument be omitted. This instance of StateNode will be considered the root. Every other
+StateNode must take a parent argument.
 */
 
 const AppState = new StateNode('AppState');
