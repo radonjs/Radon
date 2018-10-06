@@ -1,4 +1,4 @@
-const ConstructorNode = require('../constructorNode.js');
+import ConstructorNode from '../constructorNode.js';
 
 describe('Constructor Node Class', () => {
   let testNode;
