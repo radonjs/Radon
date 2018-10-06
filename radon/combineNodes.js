@@ -6,7 +6,7 @@ import * as types from './constants.js'
 const silo = {};
 
 /**
- * Takes all of the constructorNodes created by the developer
+ * Takes all of the constructorNodes created by the developer and turns them into the silo
  * @param  {...ConstructorNode} args - A list of constructor Nodes
  */
 
@@ -14,34 +14,43 @@ function combineNodes(...args) {
   if (args.length === 0) throw new Error('combineNodes function takes at least one constructorNode');
 
   // hastable accounts for passing in constructorNodes in any order. 
-  // hashtable organizes all nodes into parent-child relationships
+  // hashtable organizes all nodes into parent-child relationships so the silo is easier to create
   const hashTable = {};
+
+  // loop through the constructorNodes passed in as arguments
   args.forEach(constructorNode => {
     if (!constructorNode || constructorNode.constructor.name !== 'ConstructorNode') throw new Error('Only constructorNodes can be passed to combineNodes');
+    // a node with a null parent will be the root node, and there can only be one
     else if (constructorNode.parent === null) {
-      // this is the root node, only one constructorNode can have a parent of null
+      // we check to see if the root key already exists in the hashtable. If so, this means a root
+      // has already been established
       if (!hashTable.root) hashTable.root = [constructorNode];
       else throw new Error('Only one constructor node can have null parent');
-    } else {
+    } 
+    // if the parent isn't null, then the parent is another node
+    else {
+      // if the parent doesn't exist as a key yet, we will create the key and set it to an array
+      // that can be filled with all possible children
       if (!hashTable[constructorNode.parent]) hashTable[constructorNode.parent] = [constructorNode];
       // if parent already exists, and node being added will append to the array of children
       else hashTable[constructorNode.parent].push(constructorNode);
     }
   }) 
 
-  // ensure there is a defined root
+  // ensure there is a defined root before continuing
   if (!hashTable.root) throw new Error('At least one constructor node must have a null parent');
 
-  // recursive function that will create siloNodes and return them to a parent
+  // a recursive function that will create siloNodes and return them to a parent
   function mapToSilo(constructorNode = 'root', parentConstructorNode = null) {
+    // the very first pass will set the parent to root
     const constructorNodeName = (constructorNode === 'root') ? 'root' : constructorNode.name;
 
-    // recursive base case, we only continue if the constructorNode has constructorNode children
+    // recursive base case, we only continue if the current node has any constructorNode children
     if (!hashTable[constructorNodeName]) return;
 
     const children = {};
 
-    // loop through the children of constructorNode
+    // loop through the children arrays in the hashtable
     hashTable[constructorNodeName].forEach(currConstructorNode => {
       const valuesOfCurrSiloNode = {};
       children[currConstructorNode.name] = new SiloNode(currConstructorNode.name, valuesOfCurrSiloNode, parentConstructorNode, {}, types.CONTAINER);
@@ -52,11 +61,11 @@ function combineNodes(...args) {
 
       // create SiloNodes for all the variables in the currConstructorNode
       Object.keys(stateOfCurrConstructorNode).forEach(varInConstructorNodeState => {
-        // creates siloNodes for object variables
+        // is the variable is an object/array, we need to deconstruct it into further siloNodes
         if (typeof stateOfCurrConstructorNode[varInConstructorNodeState].value === 'object') {
           valuesOfCurrSiloNode[varInConstructorNodeState] = currSiloNode.deconstructObjectIntoSiloNodes(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState], currSiloNode, true);
         }
-        // creates siloNodes for primitive variables
+        // otherwise primitives can be stored in siloNodes and the modifiers run
         else {
           valuesOfCurrSiloNode[varInConstructorNodeState] = new SiloNode(varInConstructorNodeState, stateOfCurrConstructorNode[varInConstructorNodeState].value, currSiloNode, stateOfCurrConstructorNode[varInConstructorNodeState].modifiers);
           valuesOfCurrSiloNode[varInConstructorNodeState].linkModifiers();
@@ -65,6 +74,8 @@ function combineNodes(...args) {
 
       // recursively check to see if the current constructorNode/siloNode has any children 
       const siloNodeChildren = mapToSilo(currConstructorNode, currSiloNode);
+      // if a Node did have children, we will add those returned siloNodes as values
+      // into the current siloNode
       if (siloNodeChildren) { 
         Object.keys(siloNodeChildren).forEach(siloNode => {
           valuesOfCurrSiloNode[siloNode] = siloNodeChildren[siloNode];
@@ -74,15 +85,16 @@ function combineNodes(...args) {
     return children;
   }
 
-  // rootState
+  // here we will get the root siloNode with all its children added
   const wrappedRootSiloNode = mapToSilo();
 
-  
-  // will always only be a single key (the root) that is added into the silo
+  // add the siloNode root to the plain silo object
+  // it will always only be a single key (the root) that is added into the silo
   Object.keys(wrappedRootSiloNode).forEach(rootSiloNode => {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
+  // pass the following callback in to be applied to each siloNode
   forEachSiloNode(node => {
     // apply keySubscribe only to object and array silo nodes
     if (node.type === 'OBJECT' || node.type === "ARRAY") {

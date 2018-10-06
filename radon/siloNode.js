@@ -98,8 +98,10 @@ class SiloNode {
    */
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
+    // subscribers is an array of functions that notify subscribed components of state changes
     this.subscribers.forEach(func => {
       if (typeof func !== 'function') throw new Error('Subscriber array must only contain functions');
+      // pass the updated state into the subscribe functions to trigger re-renders on the frontend 
       func(this.getState());
     })
   }
@@ -110,21 +112,25 @@ class SiloNode {
    * still running from a previous call
    */
   runModifiers() {
-    let running = false; // prevents multiple calls from being made if already running
+    let running = false; // prevents multiple calls from being made if set to false
 
     async function run() {
       if (running === false) { // prevents multiple calls from being made if already running
         running = true;
+        // runs through any modifiers that have been added to the queue
         while (this.queue.length > 0) {
+          // enforces that we always wait for a modifier to finish before proceeding to the next
           this.value = await this.queue.shift()();
+          // for types ARRAY and OBJECT, the objects needed to be reconstructed before
+          // being returned to the developer, and now here it must be deconstructed again
           if (this.type !== types.PRIMITIVE) this.value = this.deconstructObjectIntoSiloNodes().value;
+          // once a modifier has completed we can notify the subscribers of the state change
           this.notifySubscribers();
         }
         running = false;   
-      } else {
-        return 'in progress...';
       }
     }
+
     return run;
   }
 
@@ -140,7 +146,7 @@ class SiloNode {
     const objChildren = {};
     let type, keys;
   
-    // determine if array or other object
+    // determine if the objectToDeconstruct is an array or plain object
     if (Array.isArray(objectToDeconstruct.value)) {
       keys = objectToDeconstruct.value;
       type = types.ARRAY;
@@ -148,27 +154,38 @@ class SiloNode {
       keys = Object.keys(objectToDeconstruct.value);
       type = types.OBJECT;
     }
-  
+    
+    // a silonode must be created before its children are made, because the children need to have
+    // this exact silonode passed into them as a parent, hence objChildren is currently empty
     const newSiloNode = new SiloNode(objName, objChildren, parent, objectToDeconstruct.modifiers, type);
     
+    // for arrays only
     if (Array.isArray(objectToDeconstruct.value) && objectToDeconstruct.value.length > 0) {
-      // loop through the array
+      // loop through the values in the objectToDeconstruct to create siloNodes for each of them
       objectToDeconstruct.value.forEach((indexedVal, i) => {
-        // recurse if the array has objects stored in its indices
+        // recurse if the array has objects stored in its indices that need further deconstructing
         if (typeof indexedVal === 'object') objChildren[`${objName}_${i}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${i}`, {value: indexedVal}, newSiloNode, runLinkedMods);
+        // otherwise for primitives we can go straight to creating a new siloNode
+        // the naming convention for keys involves adding '_i' to the object name
         else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, indexedVal, newSiloNode);
       })
     } 
     
+    // for plain objects
     else if (keys.length > 0) {
-      // loop through object
+      // loop through the key/value pairs in the objectToDeconstruct to create siloNodes for each of them
       keys.forEach(key => {
-        // recurse if the object has objects stored in its values
+        // recurse if the object has objects stored in its values that need further deconstructing
         if (typeof objectToDeconstruct.value[key] === 'object') objChildren[`${objName}_${key}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${key}`, {value: objectToDeconstruct.value[key]}, newSiloNode, runLinkedMods);
+        // otherwise for primitives we can go straight to creating a new siloNode
+        // the naming convention for keys involves adding '_key' to the object name 
         else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, objectToDeconstruct.value[key], newSiloNode);
       })
     }
 
+    // linkModifiers should only be run if a constructorNode has been passed into this function
+    // because that means that the silo is being created for the first time and the modifiers need
+    // to be wrapped. For deconstructed objects at runtime, wrapping is not required
     if (runLinkedMods) newSiloNode.linkModifiers();
 
     return newSiloNode;
@@ -182,23 +199,32 @@ class SiloNode {
   linkModifiers(nodeName = this.name, stateModifiers = this.modifiers) {
     if (!stateModifiers || Object.keys(stateModifiers).length === 0) return;
     const that = this;
-    // looping through every modifier added by the dev
+
+    // loops through every modifier created by the dev
     Object.keys(stateModifiers).forEach(modifierKey => {
+
+      // renamed for convenience
       const modifier = stateModifiers[modifierKey];
+      if (typeof modifier !== 'function' ) throw new Error('All modifiers must be functions'); 
 
-      if (typeof modifier !== 'function' ) throw new TypeError(); 
-
-      // adds middleware that will affect the value of this node
+      // modifiers with argument lengths of 2 or less are meant to edit primitive values
+      // OR arrays/objects in their entirety (not specific indices)
       else if (modifier.length <= 2) {
-        // wrap the dev's modifier function so we can pass the current node value into it
+        // the dev's modifier function needs to be wrapped in another function so we can pass 
+        // the current state value into the 'current' parameter
         let linkedModifier;
+        // for primitives we can pass the value straight into the modifier
         if (that.type === types.PRIMITIVE) linkedModifier = async (payload) => await modifier(that.value, payload);
-        // that.value is an object and we need to reassemble it
+        // for objects we need to reconstruct the object before it is passed into the modifier
         else if (that.type === types.OBJECT || that.type === types.ARRAY) {
           linkedModifier = async (payload) => await modifier(this.reconstruct(nodeName, that), payload);
         }
         
-        // the function that will be called when the dev tries to call their modifier
+        // the linkedModifier function will be wrapped in one more function. This final function is what
+        // will be returned to the developer
+        // this function adds the linkedModifier function to the async queue with the payload passed in as
+        // the only parameter. Afterward the queue is invoked which will begin moving through the 
+        // list of modifiers
         this.modifiers[modifierKey] = payload => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(payload);
@@ -207,15 +233,24 @@ class SiloNode {
         }
       }
 
-      // adds middleware that will affect the value of a child node of index
+      // modifiers with argument lengths of more than 2 are meant to edit specific indices or
+      // key/value pairs of objects ONLY
       else if (modifier.length > 2) {
-        // wrap the dev's modifier function so we can pass the current node value into it
+        // the dev's modifier function needs to be wrapped in another function so we can pass 
+        // the current state value into the 'current' parameter
+        // reconstruct will reassemble objects but will simply return if a primitive is passed in
         const linkedModifier = async (index, payload) => await modifier(this.reconstruct(index, that.value[index]), index, payload); 
 
-        // the function that will be called when the dev tries to call their modifier
+        // the linkedModifier function will be wrapped in one more function. This final function is what
+        // will be returned to the developer
+        // this function adds the linkedModifier function to the async queue with the payload passed in as
+        // the only parameter. Afterward the queue is invoked which will begin moving through the 
+        // list of modifiers
         this.modifiers[modifierKey] = (index, payload) => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(`${this.name}_${index}`, payload);
+          // since the modifier is called on the ARRAY/OBJECT node, we need to add the callback
+          // to the queue of the child. The naming convention is: 'objectName_i' || 'objectName_key'
           that.value[`${this.name}_${index}`].queue.push(callback);
           that.value[`${this.name}_${index}`].runQueue();
         }
@@ -224,77 +259,109 @@ class SiloNode {
   }
 
   /**
-   * Wraps developer written modifiers in async functions with state passed in automatically
-   * @param {string} nodeName - The name of the siloNode
-   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   * A middleman function used for redirection. Should be called with an object needed reconstruction
+   * and will then accurately assign its next destination
+   * @param {string} siloNodeName - The name of the siloNode
+   * @param {object} currSiloNode - The address of the parent 'OBJECT/ARRAY' siloNode
    */
   reconstruct(siloNodeName, currSiloNode) {
     let reconstructedObject;
     if (currSiloNode.type === types.OBJECT) reconstructedObject = this.reconstructObject(siloNodeName, currSiloNode);
     else if (currSiloNode.type === types.ARRAY) reconstructedObject = this.reconstructArray(siloNodeName, currSiloNode);
+    // called if the value passed in is a primitive
     else return currSiloNode.value;
+
     return reconstructedObject;
   }
 
   /**
-   * Wraps developer written modifiers in async functions with state passed in automatically
-   * @param {string} nodeName - The name of the siloNode
-   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   * Reconstructs plain objects out of siloNode values
+   * @param {string} siloNodeName - The name of the siloNode
+   * @param {object} currSiloNode - The address of the parent 'OBJECT' siloNode
    */
   reconstructObject(siloNodeName, currSiloNode) {
+    // our currently empty object to be used for reconstruction
     const newObject = {};
-    // loop through object values currently stored as nodes
+    // loop through the siloNodes stored in the 'OBJECT' value to extract the data
     Object.keys(currSiloNode.value).forEach(key => {
+      // simplified name
       const childObj = currSiloNode.value[key];
       
-      //get keyName from the naming convention
+      // get the keyName from the naming convention
+      // if the siloNode name is 'cart_shirts', the slice will give us 'shirts'
       const extractedKey = key.slice(siloNodeName.length + 1);
+      // if an additional object is stored in the values, then we must recurse to
+      // reconstruct the nested object as well
       if (childObj.type === types.OBJECT || childObj.type === types.ARRAY) {
         newObject[extractedKey] = this.reconstruct(key, childObj);
-      } else if (childObj.type === types.PRIMITIVE) {
+      }
+      // otherwise we have a primitive value which can easily be added to the reconstructed
+      // object using our extractedKey to properly label it 
+      else if (childObj.type === types.PRIMITIVE) {
         newObject[extractedKey] = childObj.value;
       }
     })
+
+    // object successfully reconstructed at this level
     return newObject;
   }
 
   /**
-   * Wraps developer written modifiers in async functions with state passed in automatically
-   * @param {string} nodeName - The name of the siloNode
-   * @param {object} stateModifiers - An object containing unwrapped modifiers most likely from the constructorNode
+   * Reconstructs arrays out of siloNode values
+   * @param {string} siloNodeName - The name of the siloNode
+   * @param {object} currSiloNode - The address of the parent 'ARRAY' siloNode
    */
   reconstructArray(siloNodeName, currSiloNode) {
+    // our currently empty array to be used for reconstruction
     const newArray = [];
-    // loop through array indices currently stored as nodes
+    // loop through the siloNodes stored in the 'ARRAY' value to extract the data
     Object.keys(currSiloNode.value).forEach((key, i) => {
+      // simplified name
       const childObj = currSiloNode.value[key];
+      // if an additional object is stored in the values, then we must recurse to
+      // reconstruct the nested object as well
       if (childObj.type === types.ARRAY || childObj.type === types.OBJECT) {
         newArray.push(this.reconstruct(`${siloNodeName}_${i}`, childObj));
-      } else if (childObj.type === types.PRIMITIVE) {
+      } 
+      // otherwise we have a primitive value which can easily be added to the reconstructed
+      // object using our extractedKey to properly label it
+      else if (childObj.type === types.PRIMITIVE) {
         newArray.push(childObj.value);
       }
     })
+
+    // array successfully reconstructed at this level
     return newArray;
   }
 
+  /**
+   * Returns state values and modifiers as a plain object
+   */
   getState() {
     const state = {};
-    // call getState on parent nodes up till root and collect all variables/modifiers from parents
+    // as long as the current siloNode has a parent, we will continue to recurse up to the root
+    // to retrieve all the appropriate data
     if (this.parent !== null) {
+      // get the parents state (recursive)
       const parentState = this.parent.getState();
+      // add the returned variables and modifiers into the final object to be returned to the dev
       Object.keys(parentState).forEach(key => {
         state[key] = parentState[key];
       })
     }
 
-    // getting children of objects/arays is redundant
+    // getting children of objects/arays here is redundant because those objects will be reconstructed
     if (this.type !== types.ARRAY && this.type !== types.OBJECT)
+      // loop through 'value' of the siloNode to extract variables
       Object.keys(this.value).forEach(siloNodeName => {
         const currSiloNode = this.value[siloNodeName];
+        // any encountered objects will be reconstructed here before being added to the final object
         if (currSiloNode.type === types.OBJECT || currSiloNode.type === types.ARRAY) state[siloNodeName] = this.reconstruct(siloNodeName, currSiloNode);
+        // primitives will be directly added to the final object to be returned
         else if (currSiloNode.type === types.PRIMITIVE) state[siloNodeName] = currSiloNode.value;
 
-        // some siloNodes don't have modifiers
+        // if a siloNode has modifiers we also need to extract those from a siloNode
+        // and add them to the return object
         if (currSiloNode.modifiers) {
           Object.keys(currSiloNode.modifiers).forEach(modifier => {
             state[modifier] = currSiloNode.modifiers[modifier];

@@ -1,6 +1,5 @@
-const combineNodes = require('../combineNodes.js');
-const ConstructorNode = require('../constructorNode.js');
-const SiloNode = require('../siloNode.js');
+import combineNodes from '../combineNodes.js';
+import ConstructorNode from '../constructorNode.js';
 
 describe('The combineNodes function', () => {
   let AppState, NavState, MainState, silo;
