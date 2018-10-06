@@ -96,7 +96,6 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-<<<<<<< HEAD
   function identify () {
     //each node's ID is a snake_case string that represents a 
     //route to that node from the top of the silo by name
@@ -111,17 +110,6 @@ function combineNodes(...args) {
     forEachSiloNode(node => {
       if(!virtualSilo[node.id]){
         virtualSilo[node.id] = node.virtualNode;
-=======
-  // pass the following callback in to be applied to each siloNode
-  forEachSiloNode(node => {
-    // apply keySubscribe only to object and array silo nodes
-    if (node.type === 'OBJECT' || node.type === "ARRAY") {
-      node.modifiers.keySubscribe = (key, renderFunc) => {
-        const name = node.name + "_" + key;
-        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-        node.value[name].notifySubscribers();
-        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
->>>>>>> master
       }
     })
   }
