@@ -98,57 +98,10 @@ function combineNodes(...args) {
   function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
     forEachSiloNode(node => {
       if(!virtualSilo[node.id]){
-        const vNode = new VirtualNode;
-        node.virtualNode = vNode;
-
-        //each node is indexed in the virtualSilo at its ID
-
-        virtualSilo[node.id] = vNode;
-        
-        if(node.type === types.CONTAINER){
-          const parentHolder = node.parent;
-          node.parent = null;
-          vNode.value = node.unsheatheChildren();
-          node.parent = parentHolder;
-          Object.keys(vNode.value).forEach(key => {
-            vNode[key] = vNode.value[key];
-          })
-          delete vNode.value;
-        } else {
-          //FIND NEAREST CONTAINER NODE
-          let context = node;
-          while(context.type !== types.CONTAINER){
-            context = context.parent;
-          }
-          
-          vNode.updateTo = (data) => {
-            const route = node.id.split(context.name)[1].split('.')
-            route.splice(0, 1);
-            
-            // const route = node.id.split(context.name)[1].join().split('.'); //all the shit after the route to the context 
-            let pointer = context.virtualNode;
-            let final = route[route.length-1];
-            if(final.includes('_')) final = final.split('_')[1]
-            route.splice(route.length-1, 1);
-
-            route.forEach(item => {
-              if(item.includes('_')){
-                pointer = pointer[item.split('_')[1]];
-              } else {
-                pointer = pointer[item];
-              }
-            })
-
-            pointer[final] = data;
-          };
-        }
-        
-        //each node points to its parent in the virtual silo
-        if(node.parent !== null) {
-          vNode.parent = virtualSilo[node.parent.id]
-        }
+        virtualSilo[node.id] = node.virtualNode;
       }
-    })}
+    })
+  }
 
     virtualize();
       
@@ -236,7 +189,7 @@ silo.subscribe = (renderFunction, name) => {
   }
   
   if (!!foundNode) {
-    renderFunction(foundNode.getState())
+    
     if (foundNode.value) {
       Object.keys(foundNode.value).forEach(key => {
         let node = foundNode.value[key];
@@ -247,6 +200,7 @@ silo.subscribe = (renderFunction, name) => {
         }
       })
     }
+    foundNode.notifySubscribers();
   } else {
     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }

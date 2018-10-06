@@ -1,5 +1,5 @@
-const ConstructorNode = require('./constructorNode.js');
-const combineNodes = require('./combineNodes.js');
+import ConstructorNode from '../constructorNode.js'
+import combineNodes from '../combineNodes.js'
 
 describe('Initialize State', () => {
     const PersonState = new ConstructorNode('PersonState', 'ColorState');
@@ -52,6 +52,8 @@ describe('Initialize State', () => {
         expect(silo['ColorState'].value['blue'].value['blue_0'].id).toBe('ColorState.blue.blue_0')
         expect(silo['ColorState'].value['PersonState'].value['name'].id).toBe('ColorState.PersonState.name')
     })
+
+    console.log(silo.virtualSilo);
 
 
 
