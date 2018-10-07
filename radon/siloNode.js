@@ -1,4 +1,6 @@
 import * as types from './constants.js';
+import VirtualNode from './virtualNode.js'
+
 
 class SiloNode {
   constructor(name, value, parent = null, modifiers = {}, type = types.PRIMITIVE) {
@@ -9,19 +11,33 @@ class SiloNode {
     this.subscribers = [];
     this.parent = parent; // circular silo node
     this.type = type;
-
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
     this.runModifiers = this.runModifiers.bind(this);
-    this.notifySubscribers = this.notifySubscribers.bind(this);
+    this.notifySubscribers = this.notifySubscribers.bind(this); 
     this.getState = this.getState.bind(this);
     this.reconstructArray = this.reconstructArray.bind(this);
     this.reconstructObject = this.reconstructObject.bind(this);
     this.deconstructObjectIntoSiloNodes = this.deconstructObjectIntoSiloNodes.bind(this);
     this.reconstruct = this.reconstruct.bind(this);
-
+    this.pushToSubscribers = this.pushToSubscribers.bind(this);
+    this.removeFromSubscribersAtIndex = this.removeFromSubscribersAtIndex(this);
+    
     // invoke functions
     this.runQueue = this.runModifiers();
+    
+    if(this.type === 'ARRAY' || this.type === 'OBJECT'){
+      this.modifiers.keySubscribe = (key, renderFunction) => {
+        const name = this.name + '_' + key;
+        const subscribedAtIndex = this.value[name].pushToSubscribers(renderFunction);
+        this.value[name].notifySubscribers();
+        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+      }
+    }
+    
+    this.id;
+    this.issueID();
+    this.virtualNode = new VirtualNode(this, this.modifiers);
   }
 
   get name() {
@@ -84,7 +100,20 @@ class SiloNode {
     this._type = type;
   }
 
-  // do we need this?
+  get virtualNode(){
+    return this._virtualNode
+  }
+
+  set virtualNode(virtualNode){
+    this._virtualNode = virtualNode;
+  }
+
+  get id(){
+    return this._id;
+  }
+
+ 
+
   pushToSubscribers(renderFunction){
     this.subscribers.push(renderFunction);
   }
@@ -93,9 +122,18 @@ class SiloNode {
     this.subcribers = this.subscribers.slice(index, 1);
   }
 
-  /**
-   * Tells all subscribers of a siloNode that changes to state have been made
-   */
+  //there's no setter for the ID because you cant set it directly. you have to use issueID
+
+  //issueID MUST BE CALLED ON THE NODES IN ORDER ROOT TO LEAF. it always assumes that this node's parent will
+  //have had issueID called on it before. use applyToSilo to make sure it runs in the right order
+  issueID(){
+    if(this.parent === null){ //its the root node
+      this._id = this.name;
+    } else {                  //its not the root node
+      this._id = this.parent.id + '.' + this.name;
+    }
+  }
+
   notifySubscribers() {
     if (this.subscribers.length === 0) return;
     // subscribers is an array of functions that notify subscribed components of state changes
@@ -121,10 +159,9 @@ class SiloNode {
         while (this.queue.length > 0) {
           // enforces that we always wait for a modifier to finish before proceeding to the next
           this.value = await this.queue.shift()();
-          // for types ARRAY and OBJECT, the objects needed to be reconstructed before
-          // being returned to the developer, and now here it must be deconstructed again
+          this.virtualNode.updateTo(this.value);
           if (this.type !== types.PRIMITIVE) this.value = this.deconstructObjectIntoSiloNodes().value;
-          // once a modifier has completed we can notify the subscribers of the state change
+          
           this.notifySubscribers();
         }
         running = false;   
@@ -256,6 +293,10 @@ class SiloNode {
         }
       }
     })
+    
+    Object.keys(this.modifiers).forEach( modifierKey => {
+      this.virtualNode[modifierKey] = this.modifiers[modifierKey];
+    })
   }
 
   /**
@@ -334,43 +375,46 @@ class SiloNode {
     return newArray;
   }
 
-  /**
-   * Returns state values and modifiers as a plain object
-   */
-  getState() {
-    const state = {};
-    // as long as the current siloNode has a parent, we will continue to recurse up to the root
-    // to retrieve all the appropriate data
-    if (this.parent !== null) {
-      // get the parents state (recursive)
-      const parentState = this.parent.getState();
-      // add the returned variables and modifiers into the final object to be returned to the dev
-      Object.keys(parentState).forEach(key => {
-        state[key] = parentState[key];
-      })
+  getState(){
+    if(this.type === types.CONTAINER){
+      return this.virtualNode
+    } else {
+      let context = this.virtualNode;
+      while(context.type !== types.CONTAINER){
+        context = context.parent;
+      }
+      return context;
     }
-
-    // getting children of objects/arays here is redundant because those objects will be reconstructed
-    if (this.type !== types.ARRAY && this.type !== types.OBJECT)
-      // loop through 'value' of the siloNode to extract variables
-      Object.keys(this.value).forEach(siloNodeName => {
-        const currSiloNode = this.value[siloNodeName];
-        // any encountered objects will be reconstructed here before being added to the final object
-        if (currSiloNode.type === types.OBJECT || currSiloNode.type === types.ARRAY) state[siloNodeName] = this.reconstruct(siloNodeName, currSiloNode);
-        // primitives will be directly added to the final object to be returned
-        else if (currSiloNode.type === types.PRIMITIVE) state[siloNodeName] = currSiloNode.value;
-
-        // if a siloNode has modifiers we also need to extract those from a siloNode
-        // and add them to the return object
-        if (currSiloNode.modifiers) {
-          Object.keys(currSiloNode.modifiers).forEach(modifier => {
-            state[modifier] = currSiloNode.modifiers[modifier];
-          })
-        }
-      })
-
-    return state;
   }
+
+  // unsheatheChildren() {
+
+  //   const state = {};
+  //   // call getState on parent nodes up till root and collect all variables/modifiers from parents
+  //   if (this.parent !== null) {
+  //     const parentState = this.parent.unsheatheChildren();
+  //     Object.keys(parentState).forEach(key => {
+  //       state[key] = parentState[key];
+  //     })
+  //   }
+
+  //   // getting children of objects/arays is redundant
+  //   if (this.type !== types.ARRAY && this.type !== types.OBJECT)
+  //     Object.keys(this.value).forEach(siloNodeName => {
+  //       const currSiloNode = this.value[siloNodeName];
+  //       if (currSiloNode.type === types.OBJECT || currSiloNode.type === types.ARRAY) state[siloNodeName] = this.reconstruct(siloNodeName, currSiloNode);
+  //       else if (currSiloNode.type === types.PRIMITIVE) state[siloNodeName] = currSiloNode.value;
+
+  //       // some siloNodes don't have modifiers
+  //       if (currSiloNode.modifiers) {
+  //         Object.keys(currSiloNode.modifiers).forEach(modifier => {
+  //           state[modifier] = currSiloNode.modifiers[modifier];
+  //         })
+  //       }
+  //     })
+
+  //   return state;
+  // }
 }
 
 export default SiloNode;

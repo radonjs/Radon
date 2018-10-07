@@ -2,8 +2,10 @@
 import ConstructorNode from './constructorNode.js';
 import SiloNode from './siloNode.js';
 import * as types from './constants.js'
+import virtualNode from './virtualNode.js'
 
 const silo = {};
+const virtualSilo = {};
 
 /**
  * Takes all of the constructorNodes created by the developer and turns them into the silo
@@ -94,19 +96,42 @@ function combineNodes(...args) {
     silo[rootSiloNode] = wrappedRootSiloNode[rootSiloNode];
   });
   
-  // pass the following callback in to be applied to each siloNode
-  forEachSiloNode(node => {
-    // apply keySubscribe only to object and array silo nodes
-    if (node.type === 'OBJECT' || node.type === "ARRAY") {
-      node.modifiers.keySubscribe = (key, renderFunc) => {
-        const name = node.name + "_" + key;
-        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-        node.value[name].notifySubscribers();
-        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
-      }
-    }
-  });
+  function identify () {
+    //each node's ID is a snake_case string that represents a 
+    //route to that node from the top of the silo by name
+    forEachSiloNode(node => {
+      node.issueID()
+    });
+  }
 
+  identify();
+
+  function virtualize () { //runs through each node in the tree, turns it into a virtual node in the vSilo
+    forEachSiloNode(node => {
+      if(!virtualSilo[node.id]){
+        virtualSilo[node.id] = node.virtualNode;
+      }
+    })
+  }
+
+    virtualize();
+      
+    
+    forEachSiloNode(node => {
+      // apply keySubscribe only to object and array silo nodes
+      if (node.type === 'OBJECT' || node.type === "ARRAY") {
+        node.modifiers.keySubscribe = (key, renderFunc) => {
+          const name = node.name + "_" + key;
+          const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
+          node.value[name].notifySubscribers();
+          return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+        }
+      }})
+    
+    
+
+  
+  silo.virtualSilo = virtualSilo;
   return silo;
 }
 
@@ -175,7 +200,7 @@ silo.subscribe = (renderFunction, name) => {
   }
   
   if (!!foundNode) {
-    renderFunction(foundNode.getState())
+    
     if (foundNode.value) {
       Object.keys(foundNode.value).forEach(key => {
         let node = foundNode.value[key];
@@ -186,6 +211,7 @@ silo.subscribe = (renderFunction, name) => {
         }
       })
     }
+    foundNode.notifySubscribers();
   } else {
     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
   }
