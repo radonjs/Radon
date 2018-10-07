@@ -1,5 +1,7 @@
 # <img src='https://i.imgur.com/k6JIgZR.png' height='130'/>
 
+[![Build Status](https://img.shields.io/travis/radonjs/Radon/master.svg?label=Radon)](https://travis-ci.org/Baratheon-iter/store) 
+
 Radon is an object-oriented state management framework for JavaScript applications.
 
 # Why?
