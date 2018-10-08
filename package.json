@@ -1,6 +1,6 @@
 {
   "name": "radon-js",
-  "version": "3.0.2",
+  "version": "4.0.0",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
   "main": "index.js",
   "scripts": {
