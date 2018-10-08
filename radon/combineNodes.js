@@ -191,7 +191,7 @@ silo.subscribe = (renderFunction, name) => {
     }
   })
 
-  const unsubscribe;
+  let unsubscribe;
   
   if (!!foundNode) {
     
