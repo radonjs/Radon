@@ -225,14 +225,10 @@ silo.subscribe = (renderFunction, name) => {
     return unsubscribe;
 
   } else {
-<<<<<<< HEAD
     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
     return errorFunc = () => {
       console.error(new Error('You are trying to run unsubscribe on a something that wasn\'t in the silo.'))
     }
-=======
-    console.error(new Error(`You are trying to subscribe to ${name}, which isn\'t in the silo.`));
->>>>>>> 9de1c347df8ee0ab7152d3a841d8bd60269ead7b
   }
 
 }
