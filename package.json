@@ -1,6 +1,6 @@
 {
   "name": "radon-js",
-  "version": "3.2.19",
+  "version": "3.2.20",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
   "main": "build/bundle.js",
   "files": [
