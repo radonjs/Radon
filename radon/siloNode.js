@@ -3,7 +3,7 @@ import VirtualNode from './virtualNode.js'
 
 
 class SiloNode {
-  constructor(name, value, parent = null, modifiers = {}, type = types.PRIMITIVE) {
+  constructor(name, value, parent = null, modifiers = {}, type = types.PRIMITIVE, devTool = null) {
     this.name = name;
     this.value = value;
     this.modifiers = modifiers;
@@ -11,6 +11,7 @@ class SiloNode {
     this.subscribers = [];
     this.parent = parent; // circular silo node
     this.type = type;
+    this.devTool = devTool;
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
     this.runModifiers = this.runModifiers.bind(this);
@@ -29,10 +30,17 @@ class SiloNode {
     if(this.type === 'ARRAY' || this.type === 'OBJECT'){
       this.modifiers.keySubscribe = (key, renderFunction) => {
         const name = this.name + '_' + key;
+<<<<<<< HEAD
         let node = this.value[name]
         const subscribedAtIndex = node.pushToSubscribers(renderFunction);
         node.notifySubscribers();
         return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+=======
+        const subscribedAtIndex = this.value[name].pushToSubscribers(renderFunction);
+        this.value[name].notifySubscribers();
+        let that = this;
+        return () => {that.value[name].removeFromSubscribersAtIndex(subscribedAtIndex)}
+>>>>>>> 9de1c347df8ee0ab7152d3a841d8bd60269ead7b
       }
     }
     
@@ -158,8 +166,21 @@ class SiloNode {
         running = true;
         // runs through any modifiers that have been added to the queue
         while (this.queue.length > 0) {
+
           // enforces that we always wait for a modifier to finish before proceeding to the next
-          this.value = await this.queue.shift()();
+          let nextModifier = this.queue.shift();
+          let previousState = null;
+          if(this.devTool) {
+            if(this.type !== types.PRIMITIVE) {
+              previousState = this.reconstruct(this.name, this);
+            } else {
+              previousState = this.value;
+            }
+          }
+          this.value = await nextModifier();
+          if(this.devTool) {
+            this.devTool.notify(previousState, this.value, this.name, nextModifier.modifierName);
+          }
           this.virtualNode.updateTo(this.value);
           if (this.type !== types.PRIMITIVE) this.value = this.deconstructObjectIntoSiloNodes().value;
           
@@ -195,7 +216,7 @@ class SiloNode {
     
     // a silonode must be created before its children are made, because the children need to have
     // this exact silonode passed into them as a parent, hence objChildren is currently empty
-    const newSiloNode = new SiloNode(objName, objChildren, parent, objectToDeconstruct.modifiers, type);
+    const newSiloNode = new SiloNode(objName, objChildren, parent, objectToDeconstruct.modifiers, type, this.devTool);
     
     // for arrays only
     if (Array.isArray(objectToDeconstruct.value) && objectToDeconstruct.value.length > 0) {
@@ -205,7 +226,7 @@ class SiloNode {
         if (typeof indexedVal === 'object') objChildren[`${objName}_${i}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${i}`, {value: indexedVal}, newSiloNode, runLinkedMods);
         // otherwise for primitives we can go straight to creating a new siloNode
         // the naming convention for keys involves adding '_i' to the object name
-        else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, indexedVal, newSiloNode);
+        else objChildren[`${objName}_${i}`] = new SiloNode(`${objName}_${i}`, indexedVal, newSiloNode, {}, types.PRIMITIVE, this.devTool);
       })
     } 
     
@@ -217,7 +238,7 @@ class SiloNode {
         if (typeof objectToDeconstruct.value[key] === 'object') objChildren[`${objName}_${key}`] = this.deconstructObjectIntoSiloNodes(`${objName}_${key}`, {value: objectToDeconstruct.value[key]}, newSiloNode, runLinkedMods);
         // otherwise for primitives we can go straight to creating a new siloNode
         // the naming convention for keys involves adding '_key' to the object name 
-        else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, objectToDeconstruct.value[key], newSiloNode);
+        else objChildren[`${objName}_${key}`] = new SiloNode(`${objName}_${key}`, objectToDeconstruct.value[key], newSiloNode, {}, types.PRIMITIVE, this.devTool);
       })
     }
 
@@ -266,6 +287,9 @@ class SiloNode {
         this.modifiers[modifierKey] = payload => {
           // wrap the linkedModifier again so that it can be added to the async queue without being invoked
           const callback = async () => await linkedModifier(payload);
+          if(this.devTool) {
+            callback.modifierName = modifierKey;
+          }
           that.queue.push(callback);
           that.runQueue();
         }
@@ -289,6 +313,9 @@ class SiloNode {
           const callback = async () => await linkedModifier(`${this.name}_${index}`, payload);
           // since the modifier is called on the ARRAY/OBJECT node, we need to add the callback
           // to the queue of the child. The naming convention is: 'objectName_i' || 'objectName_key'
+          if(this.devTool) {
+            callback.modifierName = modifierKey;
+          }
           that.value[`${this.name}_${index}`].queue.push(callback);
           that.value[`${this.name}_${index}`].runQueue();
         }
