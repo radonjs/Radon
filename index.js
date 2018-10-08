@@ -1,3 +1,4 @@
+import '@babel/polyfill';
 import combineNodes from './radon/combineNodes';
 import ConstructorNode from './radon/constructorNode';
 

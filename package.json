@@ -1,8 +1,11 @@
 {
   "name": "radon-js",
-  "version": "2.0.0",
+  "version": "3.2.16",
   "description": "Radon is an object-oriented state management framework for JavaScript applications.",
-  "main": "index.js",
+  "main": "build/bundle.js",
+  "files": [
+    "build"
+  ],
   "scripts": {
     "test": "jest",
     "test:siloNode": "jest siloNode.test.js",
@@ -20,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Joshua-Wright76/Radon.git"
+    "url": "git+https://github.com/radon-js/Radon.git"
   },
   "author": "Hannah Mitchell, Hayden Fithyan, Joshua Wright, Nicholas Smith",
   "license": "MIT",
@@ -28,7 +31,9 @@
     "url": "https://github.com/Joshua-Wright76/Radon/issues"
   },
   "homepage": "https://github.com/Joshua-Wright76/Radon#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",

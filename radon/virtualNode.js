@@ -122,7 +122,7 @@ class VirtualNode {
     }
 }
 
-module.exports = VirtualNode;
+export default VirtualNode;
 
 /*
 vNode.updateTo = (data) => {
