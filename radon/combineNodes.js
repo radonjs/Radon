@@ -216,7 +216,7 @@ silo.subscribe = (renderFunction, name) => {
       let ob;
       Object.keys(foundNodeChildren).forEach(key => {
         ob = foundNodeChildren[key]; 
-        ob.removeFromSubscribersAtIndex(ob.index)
+        ob._subscribers.splice(ob.index, 1)
       })
     }
 
@@ -226,8 +226,8 @@ silo.subscribe = (renderFunction, name) => {
 
   } else {
     console.error(new Error('You are trying to subscribe to something that isn\'t in the silo.'));
-    return errorFunc = () => {
-      console.error(new Error('You are trying to run unsubscribe on a something that wasn\'t in the silo.'))
+    return function errFunc () {
+      console.error(new Error('You are trying to run unsubscribe from something that wasn\'t in the silo in the first place.'))
     }
   }
 

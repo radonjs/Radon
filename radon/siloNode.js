@@ -33,7 +33,7 @@ class SiloNode {
         let node = this.value[name]
         const subscribedAtIndex = node.pushToSubscribers(renderFunction);
         node.notifySubscribers();
-        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+        return () => {node._subscribers.splice(subscribedAtIndex, 1)}
       }
     }
     
