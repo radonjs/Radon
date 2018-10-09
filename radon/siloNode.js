@@ -30,17 +30,10 @@ class SiloNode {
     if(this.type === 'ARRAY' || this.type === 'OBJECT'){
       this.modifiers.keySubscribe = (key, renderFunction) => {
         const name = this.name + '_' + key;
-<<<<<<< HEAD
         let node = this.value[name]
         const subscribedAtIndex = node.pushToSubscribers(renderFunction);
         node.notifySubscribers();
         return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
-=======
-        const subscribedAtIndex = this.value[name].pushToSubscribers(renderFunction);
-        this.value[name].notifySubscribers();
-        let that = this;
-        return () => {that.value[name].removeFromSubscribersAtIndex(subscribedAtIndex)}
->>>>>>> 9de1c347df8ee0ab7152d3a841d8bd60269ead7b
       }
     }
     
