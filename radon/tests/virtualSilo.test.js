@@ -53,7 +53,7 @@ describe('Initialize State', () => {
         expect(silo['ColorState'].value['PersonState'].value['name'].id).toBe('ColorState.PersonState.name')
     })
 
-    console.log(silo.virtualSilo);
+    console.log(silo.virtualSilo['ColorState.PersonState.name.name_0'].parents.ColorState);
 
 
 

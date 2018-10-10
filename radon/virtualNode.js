@@ -3,10 +3,18 @@ import * as types from './constants'
 class VirtualNode {
     constructor (node, modifiers) {
         this.parent = null;
+        this.parents = {};
         if(node.parent){
             
             this.parent = node.parent.virtualNode;
+            this.parents[this.parent.name] = this.parent;
             
+            let ancestor = this.parent;
+            
+            while(ancestor.parent !== null){
+                ancestor = ancestor.parent;
+                this.parents[ancestor.name] = ancestor;
+            }
         } 
 
         
