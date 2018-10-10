@@ -12,6 +12,7 @@ class SiloNode {
     this.parent = parent; // circular silo node
     this.type = type;
     this.devTool = devTool;
+
     // bind
     this.linkModifiers = this.linkModifiers.bind(this);
     this.runModifiers = this.runModifiers.bind(this);
@@ -407,35 +408,6 @@ class SiloNode {
       return context;
     }
   }
-
-  // unsheatheChildren() {
-
-  //   const state = {};
-  //   // call getState on parent nodes up till root and collect all variables/modifiers from parents
-  //   if (this.parent !== null) {
-  //     const parentState = this.parent.unsheatheChildren();
-  //     Object.keys(parentState).forEach(key => {
-  //       state[key] = parentState[key];
-  //     })
-  //   }
-
-  //   // getting children of objects/arays is redundant
-  //   if (this.type !== types.ARRAY && this.type !== types.OBJECT)
-  //     Object.keys(this.value).forEach(siloNodeName => {
-  //       const currSiloNode = this.value[siloNodeName];
-  //       if (currSiloNode.type === types.OBJECT || currSiloNode.type === types.ARRAY) state[siloNodeName] = this.reconstruct(siloNodeName, currSiloNode);
-  //       else if (currSiloNode.type === types.PRIMITIVE) state[siloNodeName] = currSiloNode.value;
-
-  //       // some siloNodes don't have modifiers
-  //       if (currSiloNode.modifiers) {
-  //         Object.keys(currSiloNode.modifiers).forEach(modifier => {
-  //           state[modifier] = currSiloNode.modifiers[modifier];
-  //         })
-  //       }
-  //     })
-
-  //   return state;
-  // }
 }
 
 export default SiloNode;
