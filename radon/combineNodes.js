@@ -119,22 +119,18 @@ function combineNodes(...args) {
     })
   }
 
-    virtualize();
-      
+  virtualize();
     
-    forEachSiloNode(node => {
-      // apply keySubscribe only to object and array silo nodes
-      if (node.type === 'OBJECT' || node.type === "ARRAY") {
-        node.modifiers.keySubscribe = (key, renderFunc) => {
-          const name = node.name + "_" + key;
-          const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
-          node.value[name].notifySubscribers();
-          return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
-        }
-      }})
-    
-    
-
+  forEachSiloNode(node => {
+    // apply keySubscribe only to object and array silo nodes
+    if (node.type === 'OBJECT' || node.type === "ARRAY") {
+      node.modifiers.keySubscribe = (key, renderFunc) => {
+        const name = node.name + "_" + key;
+        const subscribedAtIndex = node.value[name].pushToSubscribers(renderFunc);
+        node.value[name].notifySubscribers();
+        return () => {node.removeFromSubscribersAtIndex(subscribedAtIndex)}
+      }
+    }})
   
   silo.virtualSilo = virtualSilo;
   return silo;
@@ -199,8 +195,6 @@ silo.subscribe = (renderFunction, name) => {
   let unsubscribe;
   
   if (!!foundNode) {
-    
-    
     if (foundNode.value) {
       Object.keys(foundNode.value).forEach(key => {
         let node = foundNode.value[key];
@@ -220,7 +214,6 @@ silo.subscribe = (renderFunction, name) => {
       })
     }
 
-
     foundNode.notifySubscribers();
     return unsubscribe;
 
@@ -230,7 +223,6 @@ silo.subscribe = (renderFunction, name) => {
       console.error(new Error('You are trying to run unsubscribe from something that wasn\'t in the silo in the first place.'))
     }
   }
-
 }
 
 export default combineNodes;
