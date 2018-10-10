@@ -1,6 +1,6 @@
-import SiloNode from '../siloNode.js';
-import ConstructorNode from '../constructorNode.js';
-import combineNodes from '../combineNodes.js';
+import SiloNode from '../radon/siloNode';
+import ConstructorNode from '../radon/constructorNode';
+import combineNodes from '../radon/combineNodes';
 
 describe('SiloNode', () => {
   let AppState, NavState, silo;

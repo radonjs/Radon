@@ -1,4 +1,4 @@
-import ConstructorNode from '../constructorNode.js';
+import ConstructorNode from '../radon/constructorNode';
 
 describe('Constructor Node Class', () => {
   let testNode;

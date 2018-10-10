@@ -1,5 +1,5 @@
-import combineNodes from '../combineNodes.js';
-import ConstructorNode from '../constructorNode.js';
+import combineNodes from '../radon/combineNodes';
+import ConstructorNode from '../radon/constructorNode';
 
 describe('The combineNodes function', () => {
   let AppState, NavState, MainState, silo;

@@ -1,5 +1,5 @@
-const ConstructorNode = require('./constructorNode.js');
-const combineNodes = require('./combineNodes.js');
+import combineNodes from '../radon/combineNodes';
+import ConstructorNode from '../radon/constructorNode';
 
 describe('Initialize State', () => {
     const PersonState = new ConstructorNode('PersonState', 'ColorState');
@@ -16,7 +16,7 @@ describe('Initialize State', () => {
     })
 
     const haveBirthday = jest.fn((previous, payload) => {
-        console.log('some shit', previous + 1);
+        console.log('some stuff', previous + 1);
         return previous + 1;
     })
 
@@ -70,12 +70,6 @@ describe('Initialize State', () => {
 
         expect(valueAfter).toBe(valueBefore+1)
     })
-
-
-
-
-
-
 })
 
 

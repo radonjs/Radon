@@ -1,5 +1,5 @@
-import ConstructorNode from '../constructorNode.js'
-import combineNodes from '../combineNodes.js'
+import ConstructorNode from '../radon/constructorNode';
+import combineNodes from '../radon/combineNodes';
 
 describe('Initialize State', () => {
     const PersonState = new ConstructorNode('PersonState', 'ColorState');
