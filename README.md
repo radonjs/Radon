@@ -4,6 +4,8 @@
 
 Radon is an object-oriented state management framework for JavaScript applications.
 
+Read our documentation at [radonjs.org](http://radonjs.org)
+
 # Why?
 
 ## Data Encapsulation
