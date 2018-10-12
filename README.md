@@ -2,9 +2,9 @@
 
 [![Build Status](https://img.shields.io/travis/com/radonjs/Radon/master.svg?label=Radon&style=flat-square)](https://travis-ci.com/radonjs/Radon)  [![npm](https://img.shields.io/npm/v/radon-js.svg?style=flat-square)](https://npmjs.org/package/radon-js)
 
-Radon is an object-oriented state management framework for JavaScript applications.
+[Radon](http://radonjs.org) is an object-oriented state management framework for JavaScript applications.
 
-Read our documentation at [radonjs.org](http://radonjs.org)
+Read our documentation at [radonjs.org](http://radonjs.org/docs/introduction)
 
 # Why?
 
