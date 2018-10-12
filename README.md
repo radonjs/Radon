@@ -102,8 +102,8 @@ It is important to note that when these modifiers are called from a component, o
 must be passed into the function as Radon will fill the 'current' parameter by default.
 */
 
-<button onClick={() => this.props.updateName('Radon is cool!!!')}>Click Me</button>
-<button onClick={() => this.props.toggleStatus()}>Click Me Too</button>
+<button onClick={() => this.props.name.updateName('Radon is cool!!!')}>Click Me</button>
+<button onClick={() => this.props.status.toggleStatus()}>Click Me Too</button>
 
 /*
 The second modifier type is what helps Radon eliminate unnecessary re-rendering of frontend components.
@@ -169,6 +169,43 @@ import NarbarState from './navbarState';
 import mainState from './mainState';
 
 const silo = combineStateNodes(AppState, NavbarState, MainState);
+
+```
+
+
+### Bind the state
+In order to use the **Silo** state in a component, it must be passed to the same from the top of the application. 
+That depends on the framework binding.
+Below you can find a working example of use of **Radon** on **React** via [react-radon](https://github.com/radonjs/React-Radon), the react binding for this library, as an example:
+
+```javascript
+import {render} from 'react-dom';
+import {Provider} from 'react-radon';
+
+// Silo from Exported combineNodes from the example before
+import silo from './localSiloLocation';
+
+render(
+  <Provider silo={silo}>
+    <App />
+  </Provider>,
+  document.getElementById('root'));
+
+
+// And in the component where you need the piece of state
+
+import React from 'react';
+import { bindToSilo } from 'react-radon'
+
+const ReactComponent = (props) => {
+  return (
+    <div>
+      {props.name}
+    </div>
+  )
+}
+
+export default bindToSilo(ReactComponent);
 
 ```
 
